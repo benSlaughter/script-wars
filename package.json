@@ -1,0 +1,52 @@
+{
+	"name": "script-wars",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"lint": "eslint .",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate",
+		"db:studio": "drizzle-kit studio",
+		"audit:security": "bash scripts/audit-security.sh",
+		"audit:quality": "bash scripts/audit-quality.sh"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "^7.0.1",
+		"@sveltejs/kit": "^2.63.0",
+		"@sveltejs/vite-plugin-svelte": "^7.1.2",
+		"@testing-library/svelte": "^5.3.1",
+		"@types/better-sqlite3": "^7.6.13",
+		"drizzle-kit": "^0.31.10",
+		"eslint": "^10.5.0",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-svelte": "^3.19.0",
+		"globals": "^17.6.0",
+		"jsdom": "^29.1.1",
+		"prettier": "^3.8.4",
+		"prettier-plugin-svelte": "^4.1.1",
+		"svelte": "^5.56.1",
+		"svelte-check": "^4.6.0",
+		"typescript": "^6.0.3",
+		"typescript-eslint": "^8.61.1",
+		"vite": "^8.0.16",
+		"vitest": "^4.1.9"
+	},
+	"dependencies": {
+		"@sveltejs/adapter-node": "^5.5.5",
+		"better-auth": "^1.6.19",
+		"better-sqlite3": "^12.11.1",
+		"drizzle-orm": "^0.45.2",
+		"nanoid": "^5.1.14"
+	}
+}
