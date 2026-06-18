@@ -5,6 +5,11 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	test: {
 		include: ['tests/**/*.test.ts'],
-		environment: 'jsdom'
+		environmentMatchGlobs: [
+			['tests/sandbox.test.ts', 'node'],
+			['tests/match-runner.test.ts', 'node'],
+			['tests/rps.test.ts', 'node'],
+			['tests/**/*.test.ts', 'jsdom']
+		]
 	}
 });
