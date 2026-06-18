@@ -9,6 +9,38 @@
 	let error = $state('');
 	let saving = $state(false);
 
+	interface TestResult {
+		round: number;
+		success: boolean;
+		output: string | null;
+		error: string | null;
+		executionTimeMs: number;
+	}
+
+	let testResults = $state<TestResult[]>([]);
+	let testing = $state(false);
+
+	async function handleTest() {
+		testing = true;
+		testResults = [];
+
+		const res = await fetch('/api/scripts/test', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ code })
+		});
+
+		if (res.ok) {
+			const data = await res.json();
+			testResults = data.results;
+		} else {
+			const d = await res.json().catch(() => ({ message: 'Test failed' }));
+			error = d.message ?? 'Test failed';
+		}
+
+		testing = false;
+	}
+
 	async function handleSave() {
 		error = '';
 		saving = true;
@@ -39,13 +71,35 @@
 				<span class="badge">⚔️ Active</span>
 			{/if}
 		</div>
-		<button class="btn btn-primary" onclick={handleSave} disabled={saving}>
-			{saving ? 'Saving...' : '💾 Save Changes'}
-		</button>
+		<div class="header-actions">
+			<button class="btn btn-ghost" onclick={handleTest} disabled={testing}>
+				{testing ? '⏳ Testing...' : '🧪 Test'}
+			</button>
+			<button class="btn btn-primary" onclick={handleSave} disabled={saving}>
+				{saving ? 'Saving...' : '💾 Save Changes'}
+			</button>
+		</div>
 	</div>
 
 	{#if error}
 		<p class="error">{error}</p>
+	{/if}
+
+	{#if testResults.length > 0}
+		<div class="test-results card">
+			<h4>🧪 Test Results (vs. opponent who always plays "rock")</h4>
+			{#each testResults as r}
+				<div class="test-round" class:pass={r.success} class:fail={!r.success}>
+					<span class="round-num">R{r.round}</span>
+					{#if r.success}
+						<span class="move">{r.output}</span>
+						<span class="time">{r.executionTimeMs.toFixed(1)}ms</span>
+					{:else}
+						<span class="err">{r.error}</span>
+					{/if}
+				</div>
+			{/each}
+		</div>
 	{/if}
 
 	<div class="editor-layout">
@@ -195,5 +249,58 @@
 		.docs-panel {
 			display: none;
 		}
+	}
+
+	.header-actions {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.test-results {
+		margin-bottom: 1rem;
+		padding: 0.75rem 1rem;
+	}
+
+	.test-results h4 {
+		font-size: 0.85rem;
+		margin-bottom: 0.5rem;
+		color: var(--text-muted);
+	}
+
+	.test-round {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.3rem 0;
+		font-size: 0.85rem;
+		font-family: var(--font-mono);
+	}
+
+	.test-round.pass .round-num {
+		color: var(--green);
+	}
+
+	.test-round.fail .round-num {
+		color: var(--red);
+	}
+
+	.round-num {
+		font-weight: 700;
+		width: 2rem;
+	}
+
+	.move {
+		color: var(--accent);
+		font-weight: 600;
+	}
+
+	.time {
+		color: var(--text-muted);
+		font-size: 0.75rem;
+	}
+
+	.err {
+		color: var(--red);
+		font-size: 0.8rem;
 	}
 </style>
