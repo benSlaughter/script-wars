@@ -1,7 +1,16 @@
 <script lang="ts">
 	import '../app.css';
+	import { authClient } from '$lib/auth-client';
+	import { goto } from '$app/navigation';
 
 	let { children } = $props();
+
+	const session = authClient.useSession();
+
+	async function handleLogout() {
+		await authClient.signOut();
+		goto('/');
+	}
 </script>
 
 <div class="app">
@@ -11,7 +20,12 @@
 			<div class="nav-links">
 				<a href="/leaderboard">🏆 Leaderboard</a>
 				<a href="/scripts">📝 My Scripts</a>
-				<a href="/login" class="btn btn-ghost">Log in</a>
+				{#if $session.data}
+					<span class="user-name">{$session.data.user.name}</span>
+					<button class="btn btn-ghost" onclick={handleLogout}>Log out</button>
+				{:else}
+					<a href="/login" class="btn btn-ghost">Log in</a>
+				{/if}
 			</div>
 		</nav>
 	</header>
@@ -59,6 +73,11 @@
 		display: flex;
 		align-items: center;
 		gap: 1.5rem;
+	}
+
+	.user-name {
+		font-weight: 600;
+		color: var(--accent);
 	}
 
 	main {
