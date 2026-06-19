@@ -5,6 +5,10 @@ import * as schema from './schema.js';
 
 const secret = process.env.BETTER_AUTH_SECRET ?? 'dev-only-change-me-in-production';
 
+if (process.env.NODE_ENV === 'production' && !process.env.BETTER_AUTH_SECRET) {
+	throw new Error('BETTER_AUTH_SECRET must be set in production');
+}
+
 export const auth = betterAuth({
 	secret,
 	database: drizzleAdapter(db, {

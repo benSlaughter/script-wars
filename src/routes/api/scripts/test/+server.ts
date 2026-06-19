@@ -2,10 +2,14 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { executeLuaScript } from '$lib/server/engine';
 import { auth } from '$lib/server/auth';
+import { checkRateLimit, RATE_LIMITS } from '$lib/server/rate-limit';
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const session = await auth.api.getSession({ headers: request.headers });
 	if (!session?.user) throw error(401, 'Not authenticated');
+
+	const { allowed } = checkRateLimit(`test:${session.user.id}`, RATE_LIMITS.scriptTest);
+	if (!allowed) throw error(429, 'Too many test requests — try again in a minute');
 
 	const body = await request.json();
 	const { code } = body;
