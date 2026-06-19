@@ -24,17 +24,18 @@ export const POST: RequestHandler = async ({ request, params }) => {
 
 	if (!script) throw error(404, 'Script not found');
 
-	// Deactivate all other scripts for this user+game
-	await db
-		.update(scripts)
-		.set({ isActiveEntry: false, updatedAt: new Date() })
-		.where(and(eq(scripts.userId, session.user.id), eq(scripts.gameId, gameId)));
+	// Use a transaction to atomically deactivate all + activate one
+	await db.transaction(async (tx) => {
+		await tx
+			.update(scripts)
+			.set({ isActiveEntry: false, updatedAt: new Date() })
+			.where(and(eq(scripts.userId, session.user.id), eq(scripts.gameId, gameId)));
 
-	// Activate this one
-	await db
-		.update(scripts)
-		.set({ isActiveEntry: true, updatedAt: new Date() })
-		.where(eq(scripts.id, id));
+		await tx
+			.update(scripts)
+			.set({ isActiveEntry: true, updatedAt: new Date() })
+			.where(eq(scripts.id, id));
+	});
 
 	return json({ success: true });
 };

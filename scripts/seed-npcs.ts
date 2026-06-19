@@ -140,4 +140,8 @@ async function seed() {
 	sqlite.close();
 }
 
-seed().catch(console.error);
+seed().catch((err) => {
+	console.error(err);
+	try { sqlite.close(); } catch {}
+	process.exit(1);
+});

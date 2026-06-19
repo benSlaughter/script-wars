@@ -52,6 +52,11 @@ export async function runMatch(
 	const gameFns = game ?? await getDefaultGame();
 	const { isValidMove, resolveRound, buildContext, getPoints } = gameFns;
 
+	// For error/forfeit rounds, award the non-error side appropriately:
+	// Point-based games: opponent gets max single-round points (e.g. 5 for PD steal vs share)
+	// Round-based games: just count as opponent win (points don't matter)
+	const forfeitPoints = gameFns.pointBased ? 5 : 1;
+
 	for (let round = 1; round <= totalRounds; round++) {
 		const contextA: ScriptContext = buildContext(round, historyA, historyB);
 		const contextB: ScriptContext = buildContext(round, historyB, historyA);
@@ -77,10 +82,10 @@ export async function runMatch(
 			result = 'draw';
 		} else if (!moveA) {
 			result = 'b_error';
-			scoreB += 5; // Error = opponent gets max points
+			scoreB += forfeitPoints;
 		} else {
 			result = 'a_error';
-			scoreA += 5;
+			scoreA += forfeitPoints;
 		}
 
 		switch (result) {

@@ -98,7 +98,7 @@ export async function runTournament(gameId: string): Promise<{
 		// Mark tournament as failed so it doesn't stay "running" forever
 		await db
 			.update(tournaments)
-			.set({ status: 'complete', completedAt: new Date() })
+			.set({ status: 'failed', completedAt: new Date() })
 			.where(eq(tournaments.id, tournamentId));
 		throw err;
 	}

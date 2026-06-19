@@ -66,7 +66,7 @@ export const scripts = sqliteTable('scripts', {
 export const tournaments = sqliteTable('tournaments', {
 	id: text('id').primaryKey(),
 	gameId: text('game_id').notNull().default('rps'),
-	status: text('status', { enum: ['pending', 'running', 'complete'] })
+	status: text('status', { enum: ['pending', 'running', 'complete', 'failed'] })
 		.notNull()
 		.default('pending'),
 	startedAt: integer('started_at', { mode: 'timestamp' }),

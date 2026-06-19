@@ -57,5 +57,7 @@ export const RATE_LIMITS = {
 	// Tournament: 2 per minute
 	tournament: { windowMs: 60_000, maxRequests: 2 },
 	// Auth: 5 per minute
-	auth: { windowMs: 60_000, maxRequests: 5 }
+	auth: { windowMs: 60_000, maxRequests: 5 },
+	// Friendly match: 5 per minute
+	friendlyMatch: { windowMs: 60_000, maxRequests: 5 }
 } as const;

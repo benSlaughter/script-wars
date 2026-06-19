@@ -1,6 +1,12 @@
-import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { getAllGames } from '$lib/server/games';
 
 export const load: PageServerLoad = () => {
-	throw redirect(302, '/games/rps/leaderboard');
+	const games = getAllGames().map((g) => ({
+		id: g.id,
+		name: g.name,
+		icon: g.icon
+	}));
+
+	return { games };
 };

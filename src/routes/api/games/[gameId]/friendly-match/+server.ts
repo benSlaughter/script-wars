@@ -17,7 +17,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
 	const game = getGame(gameId);
 	if (!game) throw error(404, 'Game not found');
 
-	const { allowed } = checkRateLimit(`friendly:${session.user.id}`, RATE_LIMITS.scriptTest);
+	const { allowed } = checkRateLimit(`friendly:${session.user.id}`, RATE_LIMITS.friendlyMatch);
 	if (!allowed) throw error(429, 'Too many friendly matches. Try again in a minute.');
 
 	const body = await request.json();
