@@ -40,6 +40,7 @@ return moves[math.random(#moves)]
 		success: boolean;
 		output: string | null;
 		error: string | null;
+		warning: string | null;
 		executionTimeMs: number;
 	}
 
@@ -92,15 +93,24 @@ return moves[math.random(#moves)]
 		<div class="test-results card">
 			<h4>🧪 Test Results (vs. opponent who always plays "rock")</h4>
 			{#each testResults as r}
-				<div class="test-round" class:pass={r.success} class:fail={!r.success}>
+				<div class="test-round" class:pass={r.success && !r.warning} class:warn={r.success && !!r.warning} class:fail={!r.success}>
 					<span class="round-num">R{r.round}</span>
-					{#if r.success}
+					{#if r.success && !r.warning}
 						<span class="move">{r.output}</span>
+						<span class="time">{r.executionTimeMs.toFixed(1)}ms</span>
+					{:else if r.success && r.warning}
+						<span class="move invalid">{r.output ?? '(nil)'}</span>
 						<span class="time">{r.executionTimeMs.toFixed(1)}ms</span>
 					{:else}
 						<span class="err">{r.error}</span>
 					{/if}
 				</div>
+				{#if r.warning}
+					<div class="test-warning">⚠️ {r.warning}</div>
+				{/if}
+				{#if !r.success && r.error}
+					<div class="test-error">💥 {r.error}</div>
+				{/if}
 			{/each}
 		</div>
 	{/if}
@@ -313,6 +323,11 @@ return counter[last]</code></pre>
 		font-weight: 600;
 	}
 
+	.move.invalid {
+		color: var(--yellow, #f0ad4e);
+		text-decoration: line-through;
+	}
+
 	.time {
 		color: var(--text-muted);
 		font-size: 0.75rem;
@@ -321,5 +336,24 @@ return counter[last]</code></pre>
 	.err {
 		color: var(--red);
 		font-size: 0.8rem;
+	}
+
+	.test-round.warn .round-num {
+		color: var(--yellow, #f0ad4e);
+	}
+
+	.test-warning {
+		padding: 0.3rem 0 0.3rem 2.75rem;
+		font-size: 0.8rem;
+		color: var(--yellow, #f0ad4e);
+	}
+
+	.test-error {
+		padding: 0.3rem 0 0.3rem 2.75rem;
+		font-size: 0.8rem;
+		color: var(--red);
+		font-family: var(--font-mono);
+		white-space: pre-wrap;
+		word-break: break-word;
 	}
 </style>

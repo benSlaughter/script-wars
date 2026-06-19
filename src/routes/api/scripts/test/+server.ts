@@ -21,9 +21,12 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		throw error(400, 'Code must be under 10,000 characters');
 	}
 
+	const VALID_MOVES = ['rock', 'paper', 'scissors'];
+
 	// Run 3 test rounds to show the script works
 	const results = [];
 	const history: string[] = [];
+	const issues: string[] = [];
 
 	for (let round = 1; round <= 3; round++) {
 		const result = await executeLuaScript(code, {
@@ -32,9 +35,20 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			round_number: round
 		});
 
+		let warning: string | null = null;
+
+		if (result.success) {
+			if (!result.output) {
+				warning = 'Script did not return a value — this counts as a forfeit in matches';
+			} else if (!VALID_MOVES.includes(result.output)) {
+				warning = `Returned "${result.output}" — must be "rock", "paper", or "scissors". This counts as a forfeit in matches.`;
+			}
+		}
+
 		results.push({
 			round,
-			...result
+			...result,
+			warning
 		});
 
 		if (result.success && result.output) {
@@ -42,5 +56,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		}
 	}
 
-	return json({ results });
+	// Summarise issues
+	const hasErrors = results.some((r) => !r.success);
+	const hasWarnings = results.some((r) => r.warning);
+
+	return json({ results, hasErrors, hasWarnings });
 };
