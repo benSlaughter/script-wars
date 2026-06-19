@@ -34,9 +34,7 @@
 						<thead>
 							<tr>
 								<th>Opponent</th>
-								<th>W</th>
-								<th>L</th>
-								<th>D</th>
+								<th colspan="3">Score W/L/D</th>
 								<th>Result</th>
 							</tr>
 						</thead>

@@ -8,6 +8,7 @@
 		<h2 class="game-title">{data.gameName}</h2>
 		<nav class="game-nav">
 			<a href="/games/{data.gameId}/leaderboard">🏆 Leaderboard</a>
+			<a href="/games/{data.gameId}/friendly">⚔️ Friendly</a>
 			<a href="/games/{data.gameId}/scripts">📝 Scripts</a>
 			<a href="/games/{data.gameId}/docs">📖 Docs</a>
 		</nav>

@@ -28,6 +28,7 @@ export const load: PageServerLoad = async ({ params }) => {
 				.where(
 					and(
 						eq(matches.gameId, gameId),
+						eq(matches.matchType, 'tournament'),
 						or(
 							eq(matches.scriptAId, entry.scriptId),
 							eq(matches.scriptBId, entry.scriptId)

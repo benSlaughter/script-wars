@@ -54,9 +54,7 @@
 					<th class="rank">#</th>
 					<th>Player</th>
 					<th>Script</th>
-					<th>W</th>
-					<th>L</th>
-					<th>D</th>
+					<th colspan="3">Score W/L/D</th>
 					<th>Win %</th>
 				</tr>
 			</thead>

@@ -33,7 +33,7 @@
 					<tr>
 						<th>Opponent</th>
 						<th>Result</th>
-						<th>Score</th>
+						<th>Score W/L/D</th>
 					</tr>
 				</thead>
 				<tbody>

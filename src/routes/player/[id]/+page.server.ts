@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { users, scripts, matches } from '$lib/server/schema';
-import { eq, or } from 'drizzle-orm';
+import { eq, or, and } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ params }) => {
 	const [user] = await db.select().from(users).where(eq(users.id, params.id));
@@ -40,7 +40,10 @@ export const load: PageServerLoad = async ({ params }) => {
 			const scriptMatches = await db
 				.select()
 				.from(matches)
-				.where(or(eq(matches.scriptAId, scriptId), eq(matches.scriptBId, scriptId)));
+				.where(and(
+					eq(matches.matchType, 'tournament'),
+					or(eq(matches.scriptAId, scriptId), eq(matches.scriptBId, scriptId))
+				));
 
 			for (const match of scriptMatches) {
 				if (match.winnerId && scriptIds.includes(match.winnerId)) {
