@@ -3,17 +3,20 @@ import { scripts, matches, tournaments, users } from '$lib/server/schema';
 import { eq, and } from 'drizzle-orm';
 import { runMatch } from '$lib/server/engine';
 import { nanoid } from 'nanoid';
+import { getGame } from '$lib/server/games';
 
 /**
- * Run a full round-robin tournament.
+ * Run a full round-robin tournament for a specific game.
  * Every active entry plays every other active entry.
  */
-export async function runTournament(): Promise<{
+export async function runTournament(gameId: string): Promise<{
 	tournamentId: string;
 	matchesPlayed: number;
 	participants: number;
 }> {
-	// Get all active entries
+	const game = getGame(gameId);
+
+	// Get all active entries for this game
 	const activeScripts = await db
 		.select({
 			scriptId: scripts.id,
@@ -24,7 +27,7 @@ export async function runTournament(): Promise<{
 		})
 		.from(scripts)
 		.innerJoin(users, eq(scripts.userId, users.id))
-		.where(eq(scripts.isActiveEntry, true));
+		.where(and(eq(scripts.isActiveEntry, true), eq(scripts.gameId, gameId)));
 
 	if (activeScripts.length < 2) {
 		throw new Error('Need at least 2 active entries to run a tournament');
@@ -36,6 +39,7 @@ export async function runTournament(): Promise<{
 
 	await db.insert(tournaments).values({
 		id: tournamentId,
+		gameId,
 		status: 'running',
 		startedAt: now,
 		createdAt: now
@@ -49,8 +53,7 @@ export async function runTournament(): Promise<{
 			const scriptA = activeScripts[i];
 			const scriptB = activeScripts[j];
 
-			// Run the match (100 rounds)
-			const result = await runMatch(scriptA.code, scriptB.code, 100);
+			const result = await runMatch(scriptA.code, scriptB.code, game.maxRounds);
 
 			const winnerId =
 				result.winner === 'a'
@@ -59,9 +62,9 @@ export async function runTournament(): Promise<{
 						? scriptB.scriptId
 						: null;
 
-			// Store result
 			await db.insert(matches).values({
 				id: nanoid(),
+				gameId,
 				tournamentId,
 				scriptAId: scriptA.scriptId,
 				scriptBId: scriptB.scriptId,

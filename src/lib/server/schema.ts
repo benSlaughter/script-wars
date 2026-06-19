@@ -55,6 +55,7 @@ export const scripts = sqliteTable('scripts', {
 	userId: text('user_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade' }),
+	gameId: text('game_id').notNull().default('rps'),
 	name: text('name').notNull(),
 	code: text('code').notNull(),
 	isActiveEntry: integer('is_active_entry', { mode: 'boolean' }).default(false),
@@ -64,6 +65,7 @@ export const scripts = sqliteTable('scripts', {
 
 export const tournaments = sqliteTable('tournaments', {
 	id: text('id').primaryKey(),
+	gameId: text('game_id').notNull().default('rps'),
 	status: text('status', { enum: ['pending', 'running', 'complete'] })
 		.notNull()
 		.default('pending'),
@@ -74,6 +76,7 @@ export const tournaments = sqliteTable('tournaments', {
 
 export const matches = sqliteTable('matches', {
 	id: text('id').primaryKey(),
+	gameId: text('game_id').notNull().default('rps'),
 	tournamentId: text('tournament_id').references(() => tournaments.id),
 	scriptAId: text('script_a_id')
 		.notNull()

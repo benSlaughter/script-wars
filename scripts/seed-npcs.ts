@@ -88,6 +88,7 @@ async function seed() {
 		await db.insert(schema.scripts).values({
 			id: scriptId,
 			userId,
+			gameId: 'rps',
 			name: bot.scriptName,
 			code: bot.code,
 			isActiveEntry: true,

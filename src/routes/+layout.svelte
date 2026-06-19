@@ -30,7 +30,7 @@
 		<nav class="container">
 			<a href="/" class="logo">⚔️ Script Wars</a>
 			<div class="nav-links">
-				<a href="/leaderboard">🏆 Leaderboard</a>
+				<a href="/games">🎮 Games</a>
 				<a href="/docs">📖 Docs</a>
 				{#if $session.data}
 					<div class="user-dropdown">
@@ -44,7 +44,7 @@
 							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<!-- svelte-ignore a11y_no_static_element_interactions -->
 							<div class="dropdown-menu" onclick={(e) => e.stopPropagation()}>
-								<a href="/scripts" class="dropdown-item" onclick={closeDropdown}>📝 My Scripts</a>
+								<a href="/games/rps/scripts" class="dropdown-item" onclick={closeDropdown}>📝 My Scripts</a>
 								<hr />
 								<button class="dropdown-item logout" onclick={handleLogout}>🚪 Log out</button>
 							</div>
