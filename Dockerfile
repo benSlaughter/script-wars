@@ -10,7 +10,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-RUN npm run build
+RUN BUILDING=true npm run build
 
 # Bundle seed script so we don't need tsx in production
 RUN npx tsx --compile scripts/seed-npcs.ts 2>/dev/null || \
