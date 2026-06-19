@@ -4,9 +4,9 @@ set -e
 echo "⚔️  Script Wars — Deploy"
 echo "========================"
 
-# Check we're in the deploy directory
+# Check we're in the project root
 if [ ! -f docker-compose.yml ]; then
-    echo "❌ Run this script from the deploy/ directory"
+    echo "❌ Run this script from the project root (where docker-compose.yml is)"
     exit 1
 fi
 
