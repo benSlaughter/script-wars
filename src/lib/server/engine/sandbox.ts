@@ -25,6 +25,8 @@ const factory = new LuaFactory();
  * 3. Removes dangerous globals
  * 4. Executes user code in a controlled function
  */
+const SANDBOX_PREAMBLE_LINES = 29; // Number of lines before user code starts
+
 function buildSandboxedCode(userCode: string): string {
 	// Use a combination of timestamp + random for a unique seed each execution
 	const seed = Math.floor(Math.random() * 2147483647);
@@ -60,6 +62,18 @@ debug = nil
 -- Execute user code
 ${userCode}
 `;
+}
+
+/**
+ * Adjust line numbers in Lua error messages to match the user's script.
+ * Removes the sandbox preamble offset and replaces cryptic chunk names.
+ */
+function fixErrorMessage(msg: string): string {
+	// Replace [string "..."]:N with line N (adjusted)
+	return msg.replace(/\[string "\.\.\."\]:(\d+)/g, (_match, lineStr) => {
+		const adjustedLine = Math.max(1, parseInt(lineStr, 10) - SANDBOX_PREAMBLE_LINES);
+		return `line ${adjustedLine}`;
+	});
 }
 
 /**
@@ -110,7 +124,8 @@ export async function executeLuaScript(
 		};
 	} catch (err) {
 		const executionTimeMs = performance.now() - startTime;
-		const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+		const rawMsg = err instanceof Error ? err.message : 'Unknown error';
+		const errorMsg = fixErrorMessage(rawMsg);
 
 		return {
 			success: false,

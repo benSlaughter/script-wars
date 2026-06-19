@@ -152,6 +152,64 @@ end</code></pre>
 	</section>
 
 	<section class="card">
+		<h2>🐛 Reading Error Messages</h2>
+		<p>When your script has a bug, the test runner shows an error like:</p>
+		<pre class="error-example"><code>💥 line 5: syntax error near 'if'</code></pre>
+
+		<h3>What the parts mean</h3>
+		<table class="api-table">
+			<thead>
+				<tr><th>Part</th><th>Meaning</th></tr>
+			</thead>
+			<tbody>
+				<tr><td><code>line 5</code></td><td>The line number in <em>your</em> script where the error was found</td></tr>
+				<tr><td><code>syntax error near 'if'</code></td><td>What went wrong — Lua found something unexpected near <code>if</code></td></tr>
+			</tbody>
+		</table>
+
+		<h3>Common errors</h3>
+		<table class="api-table">
+			<thead>
+				<tr><th>Error</th><th>Cause</th><th>Fix</th></tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><code>syntax error near 'X'</code></td>
+					<td>Unexpected token — usually a missing <code>then</code>, <code>end</code>, or typo</td>
+					<td>Check the line above for missing keywords</td>
+				</tr>
+				<tr>
+					<td><code>'end' expected</code></td>
+					<td>An <code>if</code>, <code>for</code>, or <code>function</code> block wasn't closed</td>
+					<td>Add the missing <code>end</code></td>
+				</tr>
+				<tr>
+					<td><code>attempt to index a nil value</code></td>
+					<td>Accessing a field on something that doesn't exist</td>
+					<td>Check variable names and that tables are populated</td>
+				</tr>
+				<tr>
+					<td><code>attempt to call a nil value</code></td>
+					<td>Calling a function that doesn't exist</td>
+					<td>Check spelling; some globals are removed in the sandbox</td>
+				</tr>
+				<tr>
+					<td><code>Script timeout: exceeded maximum instructions</code></td>
+					<td>Infinite loop or very long computation</td>
+					<td>Add a loop exit condition or simplify logic</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<h3>Tips</h3>
+		<ul>
+			<li>Errors often point to the line <em>after</em> the actual mistake — check the line above too</li>
+			<li>Use the Test button frequently as you write — catch errors early</li>
+			<li>If your script returns an invalid move (not rock/paper/scissors), you'll see a ⚠️ warning instead of an error</li>
+		</ul>
+	</section>
+
+	<section class="card">
 		<h2>🔗 Learn More</h2>
 		<ul class="links-list">
 			<li><a href="https://www.lua.org/manual/5.4/" target="_blank" rel="noopener">Lua 5.4 Reference Manual</a> — Official docs</li>
@@ -198,6 +256,11 @@ end</code></pre>
 		overflow-x: auto;
 		font-size: 0.85rem;
 		margin: 0.75rem 0;
+	}
+
+	pre.error-example {
+		border-left: 3px solid var(--red, #e74c3c);
+		background: rgba(231, 76, 60, 0.05);
 	}
 
 	code {
