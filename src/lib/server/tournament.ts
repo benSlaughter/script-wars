@@ -47,44 +47,53 @@ export async function runTournament(gameId: string): Promise<{
 
 	let matchesPlayed = 0;
 
-	// Round-robin: every entry plays every other entry
-	for (let i = 0; i < activeScripts.length; i++) {
-		for (let j = i + 1; j < activeScripts.length; j++) {
-			const scriptA = activeScripts[i];
-			const scriptB = activeScripts[j];
+	try {
+		// Round-robin: every entry plays every other entry
+		for (let i = 0; i < activeScripts.length; i++) {
+			for (let j = i + 1; j < activeScripts.length; j++) {
+				const scriptA = activeScripts[i];
+				const scriptB = activeScripts[j];
 
-			const result = await runMatch(scriptA.code, scriptB.code, game.maxRounds);
+				const result = await runMatch(scriptA.code, scriptB.code, game.maxRounds);
 
-			const winnerId =
-				result.winner === 'a'
-					? scriptA.scriptId
-					: result.winner === 'b'
-						? scriptB.scriptId
-						: null;
+				const winnerId =
+					result.winner === 'a'
+						? scriptA.scriptId
+						: result.winner === 'b'
+							? scriptB.scriptId
+							: null;
 
-			await db.insert(matches).values({
-				id: nanoid(),
-				gameId,
-				tournamentId,
-				scriptAId: scriptA.scriptId,
-				scriptBId: scriptB.scriptId,
-				winnerId,
-				rounds: result.totalRounds,
-				winsA: result.winsA,
-				winsB: result.winsB,
-				draws: result.draws,
-				playedAt: new Date()
-			});
+				await db.insert(matches).values({
+					id: nanoid(),
+					gameId,
+					tournamentId,
+					scriptAId: scriptA.scriptId,
+					scriptBId: scriptB.scriptId,
+					winnerId,
+					rounds: result.totalRounds,
+					winsA: result.winsA,
+					winsB: result.winsB,
+					draws: result.draws,
+					playedAt: new Date()
+				});
 
-			matchesPlayed++;
+				matchesPlayed++;
+			}
 		}
-	}
 
-	// Mark tournament complete
-	await db
-		.update(tournaments)
-		.set({ status: 'complete', completedAt: new Date() })
-		.where(eq(tournaments.id, tournamentId));
+		// Mark tournament complete
+		await db
+			.update(tournaments)
+			.set({ status: 'complete', completedAt: new Date() })
+			.where(eq(tournaments.id, tournamentId));
+	} catch (err) {
+		// Mark tournament as failed so it doesn't stay "running" forever
+		await db
+			.update(tournaments)
+			.set({ status: 'complete', completedAt: new Date() })
+			.where(eq(tournaments.id, tournamentId));
+		throw err;
+	}
 
 	return {
 		tournamentId,

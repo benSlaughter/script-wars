@@ -22,11 +22,11 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	if (!existing) throw error(404, 'Script not found');
 
-	// Deactivate all scripts for this user
+	// Deactivate all scripts for this user in the same game
 	await db
 		.update(scripts)
 		.set({ isActiveEntry: false, updatedAt: new Date() })
-		.where(eq(scripts.userId, session.user.id));
+		.where(and(eq(scripts.userId, session.user.id), eq(scripts.gameId, existing.gameId)));
 
 	// Activate the chosen one
 	const [updated] = await db
