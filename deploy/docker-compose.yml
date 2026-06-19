@@ -11,6 +11,9 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - HOST=0.0.0.0
+      - ORIGIN=https://script-wars.benslaughter.com
+      - PROTOCOL_HEADER=x-forwarded-proto
+      - HOST_HEADER=host
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - BETTER_AUTH_URL=https://script-wars.benslaughter.com
       - PUBLIC_TURNSTILE_SITE_KEY=${PUBLIC_TURNSTILE_SITE_KEY}
