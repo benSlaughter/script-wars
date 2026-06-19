@@ -3,13 +3,16 @@ import type { RequestHandler } from './$types';
 import { runTournament } from '$lib/server/tournament';
 import { checkRateLimit, RATE_LIMITS } from '$lib/server/rate-limit';
 import { isValidGame } from '$lib/server/games';
+import { auth } from '$lib/server/auth';
 
-export const POST: RequestHandler = async ({ getClientAddress, params }) => {
+export const POST: RequestHandler = async ({ request, getClientAddress, params }) => {
 	const { gameId } = params;
 	if (!isValidGame(gameId)) throw error(404, 'Game not found');
 
-	const ip = getClientAddress();
-	const { allowed } = checkRateLimit(`tournament:${gameId}:${ip}`, RATE_LIMITS.tournament);
+	const session = await auth.api.getSession({ headers: request.headers });
+	if (!session?.user) throw error(401, 'Not authenticated');
+
+	const { allowed } = checkRateLimit(`tournament:${gameId}:${session.user.id}`, RATE_LIMITS.tournament);
 	if (!allowed) throw error(429, 'Too many requests — tournaments are limited to 2 per minute');
 
 	try {

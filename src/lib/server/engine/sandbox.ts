@@ -25,7 +25,7 @@ const factory = new LuaFactory();
  * 3. Removes dangerous globals
  * 4. Executes user code in a controlled function
  */
-const SANDBOX_PREAMBLE_LINES = 29; // Number of lines before user code starts
+const SANDBOX_PREAMBLE_LINES = 33; // Number of lines before user code starts
 
 function buildSandboxedCode(userCode: string): string {
 	// Use a combination of timestamp + random for a unique seed each execution
@@ -58,6 +58,10 @@ rawequal = nil
 rawlen = nil
 load = nil
 debug = nil
+coroutine = nil
+string.dump = nil
+getmetatable = nil
+setmetatable = nil
 
 -- Execute user code
 ${userCode}

@@ -171,4 +171,24 @@ describe('Lua Sandbox', () => {
 		expect(result.success).toBe(false);
 		expect(result.error).toBeTruthy();
 	});
+
+	it('blocks coroutine access (prevents instruction limit bypass)', async () => {
+		const result = await executeLuaScript(
+			`local co = coroutine.create(function() while true do end end); coroutine.resume(co); return "rock"`,
+			{ opponent_history: [], my_history: [], round_number: 1 }
+		);
+
+		expect(result.success).toBe(false);
+		expect(result.error).toBeTruthy();
+	});
+
+	it('blocks getmetatable access', async () => {
+		const result = await executeLuaScript(
+			`local mt = getmetatable(""); return "rock"`,
+			{ opponent_history: [], my_history: [], round_number: 1 }
+		);
+
+		expect(result.success).toBe(false);
+		expect(result.error).toBeTruthy();
+	});
 });
