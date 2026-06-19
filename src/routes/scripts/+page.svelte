@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { authClient } from '$lib/auth-client';
-	import { onMount } from 'svelte';
 
 	interface Script {
 		id: string;
@@ -14,12 +13,15 @@
 	const session = authClient.useSession();
 	let scripts = $state<Script[]>([]);
 	let loading = $state(true);
+	let loaded = $state(false);
 
-	onMount(async () => {
-		if ($session.data) {
-			await loadScripts();
+	$effect(() => {
+		if ($session.data && !loaded) {
+			loaded = true;
+			loadScripts();
+		} else if ($session.data === null && !$session.isPending) {
+			loading = false;
 		}
-		loading = false;
 	});
 
 	async function loadScripts() {
@@ -27,6 +29,7 @@
 		if (res.ok) {
 			scripts = await res.json();
 		}
+		loading = false;
 	}
 
 	async function deleteScript(id: string) {
