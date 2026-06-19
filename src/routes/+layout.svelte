@@ -31,6 +31,7 @@
 			<a href="/" class="logo">⚔️ Script Wars</a>
 			<div class="nav-links">
 				<a href="/leaderboard">🏆 Leaderboard</a>
+				<a href="/docs">📖 Docs</a>
 				{#if $session.data}
 					<div class="user-dropdown">
 						<button
