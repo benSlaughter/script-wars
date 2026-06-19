@@ -1,13 +1,42 @@
 <script lang="ts">
 	let { data } = $props();
+	let running = $state(false);
+	let message = $state('');
+
+	async function runTournament() {
+		running = true;
+		message = '';
+
+		const res = await fetch('/api/tournament', { method: 'POST' });
+
+		if (res.ok) {
+			const result = await res.json();
+			message = `✅ Tournament complete! ${result.matchesPlayed} matches between ${result.participants} players.`;
+			// Reload page to show updated leaderboard
+			setTimeout(() => window.location.reload(), 1500);
+		} else {
+			const err = await res.json().catch(() => ({ message: 'Failed' }));
+			message = `❌ ${err.message}`;
+		}
+
+		running = false;
+	}
 </script>
 
-<h1>🏆 Leaderboard</h1>
+<div class="leaderboard-header">
+	<h1>🏆 Leaderboard</h1>
+	<button class="btn btn-primary" onclick={runTournament} disabled={running}>
+		{running ? '⏳ Running...' : '⚔️ Run Tournament'}
+	</button>
+</div>
+
+{#if message}
+	<p class="message">{message}</p>
+{/if}
 
 {#if data.entries.length === 0}
 	<div class="card empty">
-		<p>No battles yet — be the first to enter the arena!</p>
-		<a href="/register" class="btn btn-primary">Create Account</a>
+		<p>No battles yet — run a tournament to see rankings!</p>
 	</div>
 {:else}
 	<div class="card">
@@ -16,6 +45,7 @@
 				<tr>
 					<th class="rank">#</th>
 					<th>Player</th>
+					<th>Script</th>
 					<th>W</th>
 					<th>L</th>
 					<th>D</th>
@@ -26,7 +56,10 @@
 				{#each data.entries as entry, i}
 					<tr>
 						<td class="rank">{i + 1}</td>
-						<td class="player">{entry.name}</td>
+						<td class="player">
+							<a href="/player/{entry.userId}">{entry.name}</a>
+						</td>
+						<td class="script-name">{entry.scriptName}</td>
 						<td class="win">{entry.wins}</td>
 						<td class="loss">{entry.losses}</td>
 						<td class="draw">{entry.draws}</td>
@@ -39,8 +72,24 @@
 {/if}
 
 <style>
-	h1 {
+	.leaderboard-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 		margin-bottom: 1.5rem;
+	}
+
+	h1 {
+		margin: 0;
+	}
+
+	.message {
+		margin-bottom: 1rem;
+		padding: 0.5rem 1rem;
+		border-radius: 0.4rem;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		font-size: 0.9rem;
 	}
 
 	.empty {
@@ -49,7 +98,6 @@
 	}
 
 	.empty p {
-		margin-bottom: 1rem;
 		color: var(--text-muted);
 	}
 
@@ -89,5 +137,18 @@
 
 	.player {
 		font-weight: 600;
+	}
+
+	.player a {
+		color: var(--text);
+	}
+
+	.player a:hover {
+		color: var(--accent);
+	}
+
+	.script-name {
+		color: var(--text-muted);
+		font-size: 0.9rem;
 	}
 </style>

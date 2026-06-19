@@ -18,6 +18,7 @@
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
+		"seed:npcs": "tsx scripts/seed-npcs.ts",
 		"audit:security": "bash scripts/audit-security.sh",
 		"audit:quality": "bash scripts/audit-quality.sh"
 	},
@@ -37,6 +38,7 @@
 		"prettier-plugin-svelte": "^4.1.1",
 		"svelte": "^5.56.1",
 		"svelte-check": "^4.6.0",
+		"tsx": "^4.22.4",
 		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.61.1",
 		"vite": "^8.0.16",

@@ -65,6 +65,7 @@
 {:else}
 	<div class="toolbar">
 		<a href="/scripts/new" class="btn btn-primary">+ New Script</a>
+		<a href="/scripts/stats" class="btn btn-ghost">📈 Stats</a>
 	</div>
 
 	{#if scripts.length === 0}
