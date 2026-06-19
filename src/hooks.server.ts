@@ -1,15 +1,45 @@
-import { auth, verifyTurnstile } from '$lib/server/auth';
-import { svelteKitHandler } from 'better-auth/svelte-kit';
-import { startScheduler } from '$lib/server/scheduler';
-import { checkRateLimit, RATE_LIMITS } from '$lib/server/rate-limit';
-import { json, type Handle } from '@sveltejs/kit';
 import { validateDisplayName } from '$lib/validation';
-import { env } from '$env/dynamic/private';
+import { checkRateLimit, RATE_LIMITS } from '$lib/server/rate-limit';
+import type { Handle } from '@sveltejs/kit';
 
-// Start hourly tournament scheduler on server boot
-startScheduler();
+// Lazy-load heavy modules to avoid circular dependency deadlock:
+// main chunk has TLA (await server.init()) which dynamically imports hooks.server,
+// but auth/db transitively import from main chunk → deadlock if statically imported here.
+let _auth: Awaited<typeof import('$lib/server/auth')> | null = null;
+async function getAuthModule() {
+	if (!_auth) _auth = await import('$lib/server/auth');
+	return _auth;
+}
+
+let _scheduler: Awaited<typeof import('$lib/server/scheduler')> | null = null;
+async function getScheduler() {
+	if (!_scheduler) _scheduler = await import('$lib/server/scheduler');
+	return _scheduler;
+}
+
+let _svelteKitHandler: Awaited<typeof import('better-auth/svelte-kit')> | null = null;
+async function getSvelteKitHandler() {
+	if (!_svelteKitHandler) _svelteKitHandler = await import('better-auth/svelte-kit');
+	return _svelteKitHandler;
+}
+
+function jsonResponse(data: unknown, status = 200): Response {
+	return new Response(JSON.stringify(data), {
+		status,
+		headers: { 'content-type': 'application/json' }
+	});
+}
+
+let schedulerStarted = false;
 
 export const handle: Handle = async ({ event, resolve }) => {
+	// Start scheduler on first request (lazy to avoid import deadlock)
+	if (!schedulerStarted) {
+		schedulerStarted = true;
+		const { startScheduler } = await getScheduler();
+		startScheduler();
+	}
+
 	const path = event.url.pathname;
 
 	// Rate limit auth endpoints by IP
@@ -17,7 +47,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const ip = event.getClientAddress();
 		const { allowed } = checkRateLimit(`auth:${ip}`, RATE_LIMITS.auth);
 		if (!allowed) {
-			return json({ message: 'Too many attempts. Try again later.' }, { status: 429 });
+			return jsonResponse({ message: 'Too many attempts. Try again later.' }, 429);
 		}
 	}
 
@@ -31,19 +61,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 			if (body.name) {
 				const nameCheck = validateDisplayName(body.name);
 				if (!nameCheck.valid) {
-					return json({ message: nameCheck.error }, { status: 400 });
+					return jsonResponse({ message: nameCheck.error }, 400);
 				}
 			}
 
 			// Verify Turnstile token
 			const captchaToken = event.request.headers.get('x-captcha-response');
-			if (env.TURNSTILE_SECRET_KEY) {
+			if (process.env.TURNSTILE_SECRET_KEY) {
 				if (!captchaToken) {
-					return json({ message: 'CAPTCHA verification required' }, { status: 400 });
+					return jsonResponse({ message: 'CAPTCHA verification required' }, 400);
 				}
+				const { verifyTurnstile } = await getAuthModule();
 				const valid = await verifyTurnstile(captchaToken, event.getClientAddress());
 				if (!valid) {
-					return json({ message: 'CAPTCHA verification failed' }, { status: 403 });
+					return jsonResponse({ message: 'CAPTCHA verification failed' }, 403);
 				}
 			}
 		} catch {
@@ -51,5 +82,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
+	const { auth } = await getAuthModule();
+	const { svelteKitHandler } = await getSvelteKitHandler();
 	return svelteKitHandler({ event, resolve, auth });
 };
