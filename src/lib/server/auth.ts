@@ -4,14 +4,14 @@ import { db } from './db.js';
 import * as schema from './schema.js';
 import { Resend } from 'resend';
 
-const secret = process.env.BETTER_AUTH_SECRET ?? 'dev-only-change-me-in-production';
+const secret = process.env.BETTER_AUTH_SECRET;
 
-// Enforce secret in production — deferred check so build doesn't crash
+// Enforce secret is always set — fail early, fail loud
 if (typeof globalThis.__script_wars_auth_checked === 'undefined') {
 	globalThis.__script_wars_auth_checked = true;
-	if (process.env.NODE_ENV === 'production' && process.env.HOST && !process.env.BETTER_AUTH_SECRET) {
+	if (!secret) {
 		throw new Error(
-			'FATAL: BETTER_AUTH_SECRET must be set in production. ' +
+			'FATAL: BETTER_AUTH_SECRET must be set. ' +
 			'Generate one with: openssl rand -base64 32'
 		);
 	}
@@ -87,7 +87,14 @@ export const auth = betterAuth({
 export async function verifyTurnstile(token: string, ip?: string): Promise<boolean> {
 	const { env } = await import('$env/dynamic/private');
 	const secretKey = env.TURNSTILE_SECRET_KEY;
-	if (!secretKey) return true; // Skip if not configured
+	if (!secretKey) {
+		if (env.NODE_ENV === 'production') {
+			console.error('FATAL: TURNSTILE_SECRET_KEY not set in production — blocking signup');
+			return false;
+		}
+		console.warn('[DEV] TURNSTILE_SECRET_KEY not set — skipping captcha verification');
+		return true;
+	}
 
 	const formData = new URLSearchParams();
 	formData.append('secret', secretKey);
