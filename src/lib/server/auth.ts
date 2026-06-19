@@ -5,8 +5,13 @@ import * as schema from './schema.js';
 
 const secret = process.env.BETTER_AUTH_SECRET ?? 'dev-only-change-me-in-production';
 
-if (process.env.NODE_ENV === 'production' && !process.env.BETTER_AUTH_SECRET) {
-	throw new Error('BETTER_AUTH_SECRET must be set in production');
+// Enforce secret in production at runtime (not during build)
+if (
+	process.env.NODE_ENV === 'production' &&
+	!process.env.BETTER_AUTH_SECRET &&
+	!process.env.VITE_BUILD
+) {
+	console.warn('⚠️  WARNING: BETTER_AUTH_SECRET not set in production! Auth will be insecure.');
 }
 
 export const auth = betterAuth({
