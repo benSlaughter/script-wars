@@ -20,12 +20,19 @@ const factory = new LuaFactory();
 
 /**
  * Build the sandboxed Lua wrapper that:
- * 1. Sets an instruction count hook to prevent infinite loops
- * 2. Removes dangerous globals
- * 3. Executes user code in a controlled function
+ * 1. Seeds the RNG uniquely per execution
+ * 2. Sets an instruction count hook to prevent infinite loops
+ * 3. Removes dangerous globals
+ * 4. Executes user code in a controlled function
  */
 function buildSandboxedCode(userCode: string): string {
+	// Use a combination of timestamp + random for a unique seed each execution
+	const seed = Math.floor(Math.random() * 2147483647);
+
 	return `
+-- Seed RNG uniquely per execution
+math.randomseed(${seed})
+
 -- Instruction limiter
 local __count = 0
 debug.sethook(function()
