@@ -4,7 +4,7 @@ services:
     container_name: script-wars
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:3004:3000"
     volumes:
       - script-wars-data:/app/data
     environment:

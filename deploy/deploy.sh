@@ -29,7 +29,7 @@ docker compose up -d
 echo ""
 echo "✅ Script Wars is running!"
 echo "   Container: $(docker ps --filter name=script-wars --format '{{.Status}}')"
-echo "   URL: http://127.0.0.1:3000"
+echo "   URL: http://127.0.0.1:3004"
 echo ""
 echo "Next steps:"
 echo "  1. Copy nginx config:  sudo cp nginx-script-wars.conf /etc/nginx/sites-available/script-wars"
