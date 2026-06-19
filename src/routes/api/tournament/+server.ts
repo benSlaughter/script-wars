@@ -1,16 +1,17 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { runTournament } from '$lib/server/tournament';
-import { checkRateLimit, RATE_LIMITS } from '$lib/server/rate-limit';
-import { auth } from '$lib/server/auth';
+import { dev } from '$app/environment';
 
-// Legacy endpoint — defaults to RPS
+// Legacy endpoint — dev only, or with admin secret
 export const POST: RequestHandler = async ({ request }) => {
-	const session = await auth.api.getSession({ headers: request.headers });
-	if (!session?.user) throw error(401, 'Not authenticated');
-
-	const { allowed } = checkRateLimit(`tournament:rps:${session.user.id}`, RATE_LIMITS.tournament);
-	if (!allowed) throw error(429, 'Too many requests — tournaments are limited to 2 per minute');
+	if (!dev) {
+		const adminSecret = process.env.ADMIN_SECRET;
+		const authHeader = request.headers.get('x-admin-secret');
+		if (!adminSecret || authHeader !== adminSecret) {
+			throw error(403, 'Tournament triggering is disabled');
+		}
+	}
 
 	try {
 		const result = await runTournament('rps');

@@ -2,6 +2,7 @@ import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { scripts, matches, users } from '$lib/server/schema';
 import { eq, sql, or, and } from 'drizzle-orm';
+import { dev } from '$app/environment';
 
 export const load: PageServerLoad = async ({ params }) => {
 	const { gameId } = params;
@@ -70,5 +71,5 @@ export const load: PageServerLoad = async ({ params }) => {
 		return parseFloat(b.winRate) - parseFloat(a.winRate);
 	});
 
-	return { entries, gameId };
+	return { entries, gameId, isDev: dev };
 };

@@ -1,11 +1,7 @@
 <script lang="ts">
-	import { authClient } from '$lib/auth-client';
-
 	let { data } = $props();
 	let running = $state(false);
 	let message = $state('');
-
-	const session = authClient.useSession();
 
 	async function runTournament() {
 		running = true;
@@ -24,13 +20,20 @@
 
 		running = false;
 	}
+
+	function minutesUntilNextHour() {
+		return 60 - new Date().getMinutes();
+	}
 </script>
 
 <div class="leaderboard-header">
-	<h1>🏆 Leaderboard</h1>
-	{#if $session.data}
+	<div>
+		<h1>🏆 Leaderboard</h1>
+		<p class="schedule-info">⏰ Tournaments run automatically every hour — next in ~{minutesUntilNextHour()}m</p>
+	</div>
+	{#if data.isDev}
 		<button class="btn btn-primary" onclick={runTournament} disabled={running}>
-			{running ? '⏳ Running...' : '⚔️ Run Tournament'}
+			{running ? '⏳ Running...' : '🧪 Run Tournament (dev)'}
 		</button>
 	{/if}
 </div>
@@ -86,6 +89,12 @@
 
 	h1 {
 		margin: 0;
+	}
+
+	.schedule-info {
+		font-size: 0.8rem;
+		color: var(--text-muted);
+		margin-top: 0.25rem;
 	}
 
 	.message {
