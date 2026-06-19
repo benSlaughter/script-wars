@@ -50,16 +50,6 @@ export const prisonerGame: GamePlugin = {
 				code: `-- Trust no one\nreturn "steal"`
 			},
 			{
-				name: '🪞 Tit for Tat',
-				email: 'npc-pd-tft@script-wars.local',
-				code: `-- Start nice, then copy opponent\nif #opponent_history == 0 then\n  return "share"\nend\nreturn opponent_history[#opponent_history]`
-			},
-			{
-				name: '🕊️ Forgiving TfT',
-				email: 'npc-pd-ftft@script-wars.local',
-				code: `-- Like Tit for Tat, but forgive one betrayal\nif #opponent_history == 0 then\n  return "share"\nend\nif opponent_history[#opponent_history] == "steal" then\n  -- Forgive if they only stole once in last 2 rounds\n  if #opponent_history >= 2 and opponent_history[#opponent_history - 1] == "share" then\n    return "share"\n  end\n  return "steal"\nend\nreturn "share"`
-			},
-			{
 				name: '🎲 Random',
 				email: 'npc-pd-random@script-wars.local',
 				code: `-- Chaos agent\nlocal moves = {"share", "steal"}\nreturn moves[math.random(#moves)]`

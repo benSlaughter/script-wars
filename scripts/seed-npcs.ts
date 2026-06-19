@@ -53,19 +53,6 @@ if #opponent_history == 0 then
 end
 return opponent_history[#opponent_history]`
 	},
-	{
-		name: '🧠 Counter',
-		email: 'npc-counter@script-wars.local',
-		scriptName: 'Counter Strike',
-		gameId: 'rps',
-		code: `-- I counter your last move
-if #opponent_history == 0 then
-  return "rock"
-end
-local last = opponent_history[#opponent_history]
-local counter = { rock = "paper", paper = "scissors", scissors = "rock" }
-return counter[last]`
-	},
 	// Prisoner's Dilemma bots
 	{
 		name: '😇 Always Share',
@@ -82,34 +69,6 @@ return "share"`
 		gameId: 'prisoners-dilemma',
 		code: `-- Trust no one
 return "steal"`
-	},
-	{
-		name: '🪞 Tit for Tat',
-		email: 'npc-pd-tft@script-wars.local',
-		scriptName: 'Mirror Strategy',
-		gameId: 'prisoners-dilemma',
-		code: `-- Start nice, then copy opponent
-if #opponent_history == 0 then
-  return "share"
-end
-return opponent_history[#opponent_history]`
-	},
-	{
-		name: '🕊️ Forgiving TfT',
-		email: 'npc-pd-ftft@script-wars.local',
-		scriptName: 'Second Chance',
-		gameId: 'prisoners-dilemma',
-		code: `-- Like Tit for Tat, but forgive one betrayal
-if #opponent_history == 0 then
-  return "share"
-end
-if opponent_history[#opponent_history] == "steal" then
-  if #opponent_history >= 2 and opponent_history[#opponent_history - 1] == "share" then
-    return "share"
-  end
-  return "steal"
-end
-return "share"`
 	},
 	{
 		name: '🎲 Random',

@@ -57,11 +57,6 @@ export const rpsGame: GamePlugin = {
 				name: '🔄 Copycat',
 				email: 'npc-copycat@script-wars.local',
 				code: `-- I copy your last move. First round? Rock.\nif #opponent_history == 0 then\n  return "rock"\nend\nreturn opponent_history[#opponent_history]`
-			},
-			{
-				name: '🧠 Counter',
-				email: 'npc-counter@script-wars.local',
-				code: `-- I counter your last move\nif #opponent_history == 0 then\n  return "rock"\nend\nlocal last = opponent_history[#opponent_history]\nlocal counter = { rock = "paper", paper = "scissors", scissors = "rock" }\nreturn counter[last]`
 			}
 		];
 	},
