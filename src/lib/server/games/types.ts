@@ -34,8 +34,22 @@ export interface GamePlugin {
 	/** Get NPC definitions for this game */
 	getNpcs(): NpcDefinition[];
 
+	/** Default code template for new scripts */
+	defaultCode: string;
+
+	/** Default test opponent description (e.g. 'who always plays "rock"') */
+	testOpponentDescription: string;
+
 	/** Get game-specific docs sections */
 	getDocsSections(): DocsSection[];
+
+	/** Get editor sidebar docs (compact, for the code editor) */
+	getEditorDocs(): EditorDoc[];
+}
+
+export interface EditorDoc {
+	title: string;
+	content: string; // HTML content
 }
 
 export interface ScriptContext {

@@ -14,21 +14,21 @@
 	const session = authClient.useSession();
 	let scripts = $state<Script[]>([]);
 	let loading = $state(true);
-	let loaded = $state(false);
 
 	const gameId = $derived(page.params.gameId);
 
 	$effect(() => {
-		if ($session.data && !loaded) {
-			loaded = true;
-			loadScripts();
+		const gid = gameId;
+		if ($session.data && gid) {
+			loading = true;
+			loadScripts(gid);
 		} else if ($session.data === null && !$session.isPending) {
 			loading = false;
 		}
 	});
 
-	async function loadScripts() {
-		const res = await fetch(`/api/games/${gameId}/scripts`);
+	async function loadScripts(gid: string) {
+		const res = await fetch(`/api/games/${gid}/scripts`);
 		if (res.ok) {
 			scripts = await res.json();
 		}

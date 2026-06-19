@@ -1,4 +1,4 @@
-import type { GamePlugin, ScriptContext, NpcDefinition, DocsSection } from './types.js';
+import type { GamePlugin, ScriptContext, NpcDefinition, DocsSection, EditorDoc } from './types.js';
 
 const VALID_MOVES = ['rock', 'paper', 'scissors'] as const;
 
@@ -16,6 +16,16 @@ export const rpsGame: GamePlugin = {
 	validMoves: [...VALID_MOVES],
 	maxRounds: 100,
 	pointBased: false,
+
+	defaultCode: `-- Your battle script!
+-- Return "rock", "paper", or "scissors"
+-- You have access to: opponent_history, my_history, round_number
+
+local moves = {"rock", "paper", "scissors"}
+return moves[math.random(#moves)]
+`,
+
+	testOpponentDescription: 'who always plays "rock"',
 
 	isValidMove(move: string): boolean {
 		return VALID_MOVES.includes(move as (typeof VALID_MOVES)[number]);
@@ -81,6 +91,31 @@ export const rpsGame: GamePlugin = {
 <tr><td><code>opponent_history</code></td><td>Table of opponent's previous moves</td></tr>
 <tr><td><code>my_history</code></td><td>Table of your previous moves</td></tr>
 </table>`
+			}
+		];
+	},
+
+	getEditorDocs(): EditorDoc[] {
+		return [
+			{
+				title: 'Your script must return:',
+				content: `<code>"rock"</code>, <code>"paper"</code>, or <code>"scissors"</code>`
+			},
+			{
+				title: 'Available variables:',
+				content: `<dl>
+<dt><code>opponent_history</code></dt><dd>Table of opponent's previous moves</dd>
+<dt><code>my_history</code></dt><dd>Table of your previous moves</dd>
+<dt><code>round_number</code></dt><dd>Current round (1-based)</dd>
+</dl>`
+			},
+			{
+				title: 'Useful functions:',
+				content: `<dl>
+<dt><code>math.random(n)</code></dt><dd>Random integer 1 to n</dd>
+<dt><code>#table</code></dt><dd>Length of a table</dd>
+<dt><code>table[i]</code></dt><dd>Get item at index i</dd>
+</dl>`
 			}
 		];
 	}

@@ -26,4 +26,4 @@ export function isValidGame(gameId: string): boolean {
 	return games.has(gameId);
 }
 
-export type { GamePlugin, ScriptContext, NpcDefinition, DocsSection } from './types.js';
+export type { GamePlugin, ScriptContext, NpcDefinition, DocsSection, EditorDoc } from './types.js';

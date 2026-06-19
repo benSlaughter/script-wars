@@ -4,18 +4,12 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 
-	const DEFAULT_CODE = `-- Your battle script!
--- Return "rock", "paper", or "scissors"
--- You have access to: opponent_history, my_history, round_number
-
-local moves = {"rock", "paper", "scissors"}
-return moves[math.random(#moves)]
-`;
+	let { data } = $props();
 
 	const gameId = $derived(page.params.gameId);
 
 	let name = $state('My Bot');
-	let code = $state(DEFAULT_CODE);
+	let code = $state(data.defaultCode);
 	let error = $state('');
 	let saving = $state(false);
 
@@ -30,8 +24,8 @@ return moves[math.random(#moves)]
 		});
 
 		if (!res.ok) {
-			const data = await res.json().catch(() => ({ message: 'Save failed' }));
-			error = data.message ?? 'Save failed';
+			const d = await res.json().catch(() => ({ message: 'Save failed' }));
+			error = d.message ?? 'Save failed';
 			saving = false;
 			return;
 		}
@@ -62,11 +56,11 @@ return moves[math.random(#moves)]
 		});
 
 		if (res.ok) {
-			const data = await res.json();
-			testResults = data.results;
+			const d = await res.json();
+			testResults = d.results;
 		} else {
-			const data = await res.json().catch(() => ({ message: 'Test failed' }));
-			error = data.message ?? 'Test failed';
+			const d = await res.json().catch(() => ({ message: 'Test failed' }));
+			error = d.message ?? 'Test failed';
 		}
 
 		testing = false;
@@ -95,7 +89,7 @@ return moves[math.random(#moves)]
 
 	{#if testResults.length > 0}
 		<div class="test-results card">
-			<h4>🧪 Test Results (vs. opponent who always plays "rock")</h4>
+			<h4>🧪 Test Results (vs. opponent {data.testOpponentDescription})</h4>
 			{#each testResults as r (r.round)}
 				<div class="test-round" class:pass={r.success && !r.warning} class:warn={r.success && !!r.warning} class:fail={!r.success}>
 					<span class="round-num">R{r.round}</span>
@@ -125,45 +119,12 @@ return moves[math.random(#moves)]
 		</div>
 		<div class="docs-panel card">
 			<h3>🎮 Game API</h3>
-			<div class="doc-section">
-				<h4>Your script must return:</h4>
-				<code>"rock"</code>, <code>"paper"</code>, or <code>"scissors"</code>
-			</div>
-			<div class="doc-section">
-				<h4>Available variables:</h4>
-				<dl>
-					<dt><code>opponent_history</code></dt>
-					<dd>Table of opponent's previous moves</dd>
-					<dt><code>my_history</code></dt>
-					<dd>Table of your previous moves</dd>
-					<dt><code>round_number</code></dt>
-					<dd>Current round (1-based)</dd>
-				</dl>
-			</div>
-			<div class="doc-section">
-				<h4>Available functions:</h4>
-				<dl>
-					<dt><code>math.random(n)</code></dt>
-					<dd>Random integer 1 to n</dd>
-					<dt><code>#table</code></dt>
-					<dd>Length of a table</dd>
-					<dt><code>table[i]</code></dt>
-					<dd>Get item at index i</dd>
-				</dl>
-			</div>
-			<div class="doc-section">
-				<h4>Example — counter last move:</h4>
-				<pre><code>if #opponent_history == 0 then
-  return "rock"
-end
-local last = opponent_history[#opponent_history]
-local counter = &#123;
-  rock = "paper",
-  paper = "scissors",
-  scissors = "rock"
-&#125;
-return counter[last]</code></pre>
-			</div>
+			{#each data.editorDocs as doc}
+				<div class="doc-section">
+					<h4>{doc.title}</h4>
+					{@html doc.content}
+				</div>
+			{/each}
 		</div>
 	</div>
 </div>

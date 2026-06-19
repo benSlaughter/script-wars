@@ -1,4 +1,4 @@
-import type { GamePlugin, ScriptContext, NpcDefinition, DocsSection } from './types.js';
+import type { GamePlugin, ScriptContext, NpcDefinition, DocsSection, EditorDoc } from './types.js';
 
 const VALID_MOVES = ['share', 'steal'] as const;
 
@@ -10,6 +10,18 @@ export const prisonerGame: GamePlugin = {
 	validMoves: [...VALID_MOVES],
 	maxRounds: 100,
 	pointBased: true,
+
+	defaultCode: `-- Your strategy script!
+-- Return "share" or "steal"
+-- You have access to: opponent_history, my_history, round_number
+
+-- Share/Share = 3pts each, Steal/Steal = 1pt each
+-- Share/Steal = 0/5 pts
+
+return "share"
+`,
+
+	testOpponentDescription: 'who always plays "share"',
 
 	isValidMove(move: string): boolean {
 		return VALID_MOVES.includes(move as (typeof VALID_MOVES)[number]);
@@ -90,6 +102,39 @@ export const prisonerGame: GamePlugin = {
 <li><strong>Detective</strong> — Play share, steal, share, share to probe their strategy, then adapt</li>
 <li><strong>Forgiving TfT</strong> — Like Tit for Tat but occasionally forgive a single betrayal</li>
 </ul>`
+			}
+		];
+	},
+
+	getEditorDocs(): EditorDoc[] {
+		return [
+			{
+				title: 'Your script must return:',
+				content: `<code>"share"</code> or <code>"steal"</code>`
+			},
+			{
+				title: 'Scoring:',
+				content: `<table>
+<tr><td>Share + Share</td><td>3 / 3 pts</td></tr>
+<tr><td>Steal + Share</td><td>5 / 0 pts</td></tr>
+<tr><td>Steal + Steal</td><td>1 / 1 pts</td></tr>
+</table>`
+			},
+			{
+				title: 'Available variables:',
+				content: `<dl>
+<dt><code>opponent_history</code></dt><dd>Table of opponent's previous moves</dd>
+<dt><code>my_history</code></dt><dd>Table of your previous moves</dd>
+<dt><code>round_number</code></dt><dd>Current round (1-based)</dd>
+</dl>`
+			},
+			{
+				title: 'Useful functions:',
+				content: `<dl>
+<dt><code>math.random(n)</code></dt><dd>Random integer 1 to n</dd>
+<dt><code>#table</code></dt><dd>Length of a table</dd>
+<dt><code>table[i]</code></dt><dd>Get item at index i</dd>
+</dl>`
 			}
 		];
 	}
