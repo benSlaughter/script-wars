@@ -16,12 +16,17 @@ export interface GamePlugin {
 	validMoves: string[];
 	/** Number of rounds per match */
 	maxRounds: number;
+	/** Whether scoring is point-based (true) or win/loss per round (false) */
+	pointBased: boolean;
 
 	/** Check if a move is valid */
 	isValidMove(move: string): boolean;
 
 	/** Resolve a single round — returns who won */
 	resolveRound(moveA: string, moveB: string): 'a' | 'b' | 'draw';
+
+	/** Get points awarded for a round (default: win=1, loss=0, draw=0) */
+	getPoints(moveA: string, moveB: string): [number, number];
 
 	/** Build the Lua context for a round */
 	buildContext(round: number, myHistory: string[], opponentHistory: string[]): ScriptContext;

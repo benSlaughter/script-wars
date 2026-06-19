@@ -54,6 +54,7 @@ export const load: PageServerLoad = async ({ params, request }) => {
 	return {
 		gameId,
 		gameName: game.name,
+		pointBased: game.pointBased,
 		hasActiveScript,
 		opponents,
 		isLoggedIn: !!session

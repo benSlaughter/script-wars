@@ -3,9 +3,11 @@ import { db } from '$lib/server/db';
 import { scripts, matches, users } from '$lib/server/schema';
 import { eq, sql, or, and } from 'drizzle-orm';
 import { dev } from '$app/environment';
+import { getGame } from '$lib/server/games';
 
 export const load: PageServerLoad = async ({ params }) => {
 	const { gameId } = params;
+	const game = getGame(gameId);
 
 	// Get all active entries for this game with their match stats
 	const activeScripts = await db
@@ -19,7 +21,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		.innerJoin(users, eq(scripts.userId, users.id))
 		.where(and(eq(scripts.isActiveEntry, true), eq(scripts.gameId, gameId)));
 
-	// For each active script, calculate W/L/D
+	// For each active script, calculate stats
 	const entries = await Promise.all(
 		activeScripts.map(async (entry) => {
 			const matchResults = await db
@@ -39,6 +41,7 @@ export const load: PageServerLoad = async ({ params }) => {
 			let wins = 0;
 			let losses = 0;
 			let draws = 0;
+			let totalScore = 0;
 
 			for (const match of matchResults) {
 				if (match.winnerId === entry.scriptId) {
@@ -48,6 +51,9 @@ export const load: PageServerLoad = async ({ params }) => {
 				} else {
 					losses++;
 				}
+				// Accumulate points
+				const isA = match.scriptAId === entry.scriptId;
+				totalScore += isA ? match.scoreA : match.scoreB;
 			}
 
 			const total = wins + losses + draws;
@@ -61,16 +67,21 @@ export const load: PageServerLoad = async ({ params }) => {
 				losses,
 				draws,
 				total,
-				winRate
+				winRate,
+				totalScore
 			};
 		})
 	);
 
-	// Sort by wins desc, then win rate
-	entries.sort((a, b) => {
-		if (b.wins !== a.wins) return b.wins - a.wins;
-		return parseFloat(b.winRate) - parseFloat(a.winRate);
-	});
+	// Sort: point-based games by total score, round-based by wins
+	if (game.pointBased) {
+		entries.sort((a, b) => b.totalScore - a.totalScore);
+	} else {
+		entries.sort((a, b) => {
+			if (b.wins !== a.wins) return b.wins - a.wins;
+			return parseFloat(b.winRate) - parseFloat(a.winRate);
+		});
+	}
 
-	return { entries, gameId, isDev: dev };
+	return { entries, gameId, isDev: dev, pointBased: game.pointBased };
 };

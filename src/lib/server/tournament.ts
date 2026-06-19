@@ -57,7 +57,9 @@ export async function runTournament(gameId: string): Promise<{
 				const result = await runMatch(scriptA.code, scriptB.code, game.maxRounds, {
 					isValidMove: (m) => game.isValidMove(m),
 					resolveRound: (a, b) => game.resolveRound(a, b),
-					buildContext: (r, my, opp) => game.buildContext(r, my, opp)
+					getPoints: (a, b) => game.getPoints(a, b),
+					buildContext: (r, my, opp) => game.buildContext(r, my, opp),
+					pointBased: game.pointBased
 				});
 
 				const winnerId =
@@ -78,6 +80,8 @@ export async function runTournament(gameId: string): Promise<{
 					winsA: result.winsA,
 					winsB: result.winsB,
 					draws: result.draws,
+					scoreA: result.scoreA,
+					scoreB: result.scoreB,
 					playedAt: new Date()
 				});
 

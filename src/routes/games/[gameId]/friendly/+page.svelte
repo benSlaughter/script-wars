@@ -8,6 +8,8 @@
 		winsA: number;
 		winsB: number;
 		draws: number;
+		scoreA: number;
+		scoreB: number;
 		winner: 'a' | 'b' | 'draw';
 		rounds: { round: number; moveA: string | null; moveB: string | null; result: string }[];
 	} | null = $state(null);
@@ -73,9 +75,15 @@
 						<span class="them">{result.opponentName}'s {result.opponentScript}</span>
 					</div>
 					<div class="score-line">
-						<span class="win">{result.winsA}W</span>
-						<span class="loss">{result.winsB}L</span>
-						<span class="draw">{result.draws}D</span>
+						{#if data.pointBased}
+							<span class="points">{result.scoreA} pts</span>
+							<span class="vs">vs</span>
+							<span class="points">{result.scoreB} pts</span>
+						{:else}
+							<span class="win">{result.winsA}W</span>
+							<span class="loss">{result.winsB}L</span>
+							<span class="draw">{result.draws}D</span>
+						{/if}
 					</div>
 				</div>
 			</div>

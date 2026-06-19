@@ -51,7 +51,9 @@ export const POST: RequestHandler = async ({ request, params }) => {
 	const result = await runMatch(myScript.code, oppScript.code, game.maxRounds, {
 		isValidMove: (m) => game.isValidMove(m),
 		resolveRound: (a, b) => game.resolveRound(a, b),
-		buildContext: (r, my, opp) => game.buildContext(r, my, opp)
+		getPoints: (a, b) => game.getPoints(a, b),
+		buildContext: (r, my, opp) => game.buildContext(r, my, opp),
+		pointBased: game.pointBased
 	});
 
 	// Get opponent name
@@ -74,6 +76,8 @@ export const POST: RequestHandler = async ({ request, params }) => {
 		winsA: result.winsA,
 		winsB: result.winsB,
 		draws: result.draws,
+		scoreA: result.scoreA,
+		scoreB: result.scoreB,
 		matchType: 'friendly',
 		playedAt: new Date()
 	});
@@ -86,6 +90,8 @@ export const POST: RequestHandler = async ({ request, params }) => {
 		winsA: result.winsA,
 		winsB: result.winsB,
 		draws: result.draws,
+		scoreA: result.scoreA,
+		scoreB: result.scoreB,
 		winner: result.winner,
 		rounds: result.rounds
 	});

@@ -9,16 +9,24 @@ export const prisonerGame: GamePlugin = {
 	icon: '🤝',
 	validMoves: [...VALID_MOVES],
 	maxRounds: 100,
+	pointBased: true,
 
 	isValidMove(move: string): boolean {
 		return VALID_MOVES.includes(move as (typeof VALID_MOVES)[number]);
 	},
 
 	resolveRound(moveA: string, moveB: string): 'a' | 'b' | 'draw' {
-		// Both share or both steal = draw
+		// Both same = draw, one steals = stealer wins the round
 		if (moveA === moveB) return 'draw';
-		// One shares, one steals = stealer wins
 		return moveA === 'steal' ? 'a' : 'b';
+	},
+
+	getPoints(moveA: string, moveB: string): [number, number] {
+		if (moveA === 'share' && moveB === 'share') return [3, 3];
+		if (moveA === 'share' && moveB === 'steal') return [0, 5];
+		if (moveA === 'steal' && moveB === 'share') return [5, 0];
+		// steal/steal
+		return [1, 1];
 	},
 
 	buildContext(round: number, myHistory: string[], opponentHistory: string[]): ScriptContext {
@@ -65,14 +73,14 @@ export const prisonerGame: GamePlugin = {
 				title: '🎯 How It Works',
 				content: `<p>Each match is <strong>100 rounds</strong>. Your script runs once per round and must return <code>"share"</code> or <code>"steal"</code>.</p>
 <table>
-<tr><th>You</th><th>Opponent</th><th>Result</th></tr>
-<tr><td>Share</td><td>Share</td><td>Draw — mutual benefit</td></tr>
-<tr><td>Steal</td><td>Steal</td><td>Draw — mutual punishment</td></tr>
-<tr><td>Steal</td><td>Share</td><td>You win the round</td></tr>
-<tr><td>Share</td><td>Steal</td><td>You lose the round</td></tr>
+<tr><th>You</th><th>Opponent</th><th>Your Points</th><th>Their Points</th></tr>
+<tr><td>Share</td><td>Share</td><td>3</td><td>3</td></tr>
+<tr><td>Steal</td><td>Share</td><td>5</td><td>0</td></tr>
+<tr><td>Share</td><td>Steal</td><td>0</td><td>5</td></tr>
+<tr><td>Steal</td><td>Steal</td><td>1</td><td>1</td></tr>
 </table>
-<p>The player who wins more rounds wins the match. Draws don't count for either side.</p>
-<p><strong>The dilemma:</strong> Always stealing beats a naive sharer, but two stealers both do worse than two sharers. Can you build trust?</p>`
+<p>After 100 rounds, the player with the <strong>most total points</strong> wins the match.</p>
+<p><strong>The dilemma:</strong> Mutual sharing scores 300 each (3×100). Mutual stealing only scores 100 each (1×100). But if you share and they steal, you get nothing while they get 500. Can you build trust?</p>`
 			},
 			{
 				title: '🎮 Game Context',

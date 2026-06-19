@@ -54,7 +54,11 @@
 					<th class="rank">#</th>
 					<th>Player</th>
 					<th>Script</th>
-					<th colspan="3">Score W/L/D</th>
+					{#if data.pointBased}
+						<th>Total Score</th>
+					{:else}
+						<th colspan="3">Score W/L/D</th>
+					{/if}
 					<th>Win %</th>
 				</tr>
 			</thead>
@@ -66,9 +70,13 @@
 							<a href="/player/{entry.userId}">{entry.name}</a>
 						</td>
 						<td class="script-name">{entry.scriptName}</td>
-						<td class="win">{entry.wins}</td>
-						<td class="loss">{entry.losses}</td>
-						<td class="draw">{entry.draws}</td>
+						{#if data.pointBased}
+							<td class="score">{entry.totalScore} pts</td>
+						{:else}
+							<td class="win">{entry.wins}</td>
+							<td class="loss">{entry.losses}</td>
+							<td class="draw">{entry.draws}</td>
+						{/if}
 						<td>{entry.winRate}%</td>
 					</tr>
 				{/each}

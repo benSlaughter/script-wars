@@ -90,5 +90,7 @@ export const matches = sqliteTable('matches', {
 	winsB: integer('wins_b').notNull().default(0),
 	draws: integer('draws').notNull().default(0),
 	matchType: text('match_type', { enum: ['tournament', 'friendly'] }).notNull().default('tournament'),
+	scoreA: integer('score_a').notNull().default(0),
+	scoreB: integer('score_b').notNull().default(0),
 	playedAt: integer('played_at', { mode: 'timestamp' }).notNull()
 });

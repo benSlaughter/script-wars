@@ -15,6 +15,7 @@ export const rpsGame: GamePlugin = {
 	icon: '✊',
 	validMoves: [...VALID_MOVES],
 	maxRounds: 100,
+	pointBased: false,
 
 	isValidMove(move: string): boolean {
 		return VALID_MOVES.includes(move as (typeof VALID_MOVES)[number]);
@@ -23,6 +24,13 @@ export const rpsGame: GamePlugin = {
 	resolveRound(moveA: string, moveB: string): 'a' | 'b' | 'draw' {
 		if (moveA === moveB) return 'draw';
 		return WINS_AGAINST[moveA] === moveB ? 'a' : 'b';
+	},
+
+	getPoints(moveA: string, moveB: string): [number, number] {
+		const result = this.resolveRound(moveA, moveB);
+		if (result === 'a') return [1, 0];
+		if (result === 'b') return [0, 1];
+		return [0, 0];
 	},
 
 	buildContext(round: number, myHistory: string[], opponentHistory: string[]): ScriptContext {

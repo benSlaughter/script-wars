@@ -13,6 +13,8 @@ export interface MatchResult {
 	winsA: number;
 	winsB: number;
 	draws: number;
+	scoreA: number;
+	scoreB: number;
 	rounds: RoundDetail[];
 	totalRounds: number;
 	winner: 'a' | 'b' | 'draw';
@@ -21,7 +23,9 @@ export interface MatchResult {
 export interface GameFunctions {
 	isValidMove(move: string): boolean;
 	resolveRound(moveA: string, moveB: string): 'a' | 'b' | 'draw';
+	getPoints(moveA: string, moveB: string): [number, number];
 	buildContext(round: number, myHistory: string[], opponentHistory: string[]): ScriptContext;
+	pointBased?: boolean;
 }
 
 const DEFAULT_ROUNDS = 100;
@@ -41,9 +45,12 @@ export async function runMatch(
 	let winsA = 0;
 	let winsB = 0;
 	let draws = 0;
+	let scoreA = 0;
+	let scoreB = 0;
 
 	// Default game functions (RPS) for backward compatibility
-	const { isValidMove, resolveRound, buildContext } = game ?? await getDefaultGame();
+	const gameFns = game ?? await getDefaultGame();
+	const { isValidMove, resolveRound, buildContext, getPoints } = gameFns;
 
 	for (let round = 1; round <= totalRounds; round++) {
 		const contextA: ScriptContext = buildContext(round, historyA, historyB);
@@ -62,12 +69,18 @@ export async function runMatch(
 		if (moveA && moveB) {
 			const resolution = resolveRound(moveA, moveB);
 			result = resolution === 'a' ? 'a_wins' : resolution === 'b' ? 'b_wins' : 'draw';
+			// Accumulate points
+			const [ptsA, ptsB] = getPoints(moveA, moveB);
+			scoreA += ptsA;
+			scoreB += ptsB;
 		} else if (!moveA && !moveB) {
 			result = 'draw';
 		} else if (!moveA) {
 			result = 'b_error';
+			scoreB += 5; // Error = opponent gets max points
 		} else {
 			result = 'a_error';
+			scoreA += 5;
 		}
 
 		switch (result) {
@@ -97,12 +110,18 @@ export async function runMatch(
 		});
 	}
 
-	const winner = winsA > winsB ? 'a' : winsB > winsA ? 'b' : 'draw';
+	// Point-based games: winner determined by total score
+	// Round-based games: winner determined by rounds won
+	const winner = gameFns.pointBased
+		? (scoreA > scoreB ? 'a' : scoreB > scoreA ? 'b' : 'draw')
+		: (winsA > winsB ? 'a' : winsB > winsA ? 'b' : 'draw');
 
 	return {
 		winsA,
 		winsB,
 		draws,
+		scoreA,
+		scoreB,
 		rounds,
 		totalRounds,
 		winner
@@ -118,10 +137,17 @@ async function getDefaultGame(): Promise<GameFunctions> {
 			const r = resolveRound(a as any, b as any);
 			return r === 'a_wins' ? 'a' : r === 'b_wins' ? 'b' : 'draw';
 		},
+		getPoints: (a: string, b: string) => {
+			const r = resolveRound(a as any, b as any);
+			if (r === 'a_wins') return [1, 0];
+			if (r === 'b_wins') return [0, 1];
+			return [0, 0];
+		},
 		buildContext: (round, myHistory, opponentHistory) => ({
 			opponent_history: opponentHistory,
 			my_history: myHistory,
 			round_number: round
-		})
+		}),
+		pointBased: false
 	};
 }
