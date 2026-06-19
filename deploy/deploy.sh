@@ -21,7 +21,12 @@ fi
 echo "📦 Pulling latest image..."
 docker pull ghcr.io/benslaughter/script-wars:latest
 
-# Start/restart the container
+# Stop any existing container (from manual docker run or previous deploy)
+echo "🛑 Stopping existing container..."
+docker stop script-wars 2>/dev/null || true
+docker rm script-wars 2>/dev/null || true
+
+# Start the container
 echo "🚀 Starting container..."
 docker compose up -d
 
