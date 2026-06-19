@@ -1,8 +1,8 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
-import { scripts } from '$lib/server/schema';
-import { eq, and } from 'drizzle-orm';
+import { scripts, matches } from '$lib/server/schema';
+import { eq, and, or } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { auth } from '$lib/server/auth';
 
@@ -121,6 +121,15 @@ export const DELETE: RequestHandler = async ({ request }) => {
 		.where(and(eq(scripts.id, id), eq(scripts.userId, user.id)));
 
 	if (!existing) throw error(404, 'Script not found');
+
+	// Delete matches referencing this script (FK constraint)
+	await db.delete(matches).where(
+		or(
+			eq(matches.scriptAId, id),
+			eq(matches.scriptBId, id),
+			eq(matches.winnerId, id)
+		)
+	);
 
 	await db.delete(scripts).where(eq(scripts.id, id));
 
