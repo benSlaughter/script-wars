@@ -33,6 +33,11 @@ COPY --from=builder /app/scripts/migrate.mjs ./scripts/migrate.mjs
 # Create data directory for SQLite
 RUN mkdir -p /app/data
 
+# Fix adapter-node static asset path: the server chunk expects client/
+# and prerendered/ next to itself, but Rollup nests it in server/chunks/
+RUN ln -s /app/build/client /app/build/server/chunks/client \
+ && ln -s /app/build/prerendered /app/build/server/chunks/prerendered 2>/dev/null || true
+
 # Volume for persistent SQLite database
 VOLUME ["/app/data"]
 
