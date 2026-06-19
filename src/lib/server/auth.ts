@@ -4,12 +4,13 @@ import { db } from './db.js';
 import * as schema from './schema.js';
 import { Resend } from 'resend';
 
-const secret = process.env.BETTER_AUTH_SECRET;
+const secret = process.env.BETTER_AUTH_SECRET ?? 'build-placeholder';
 
-// Enforce secret is always set — fail early, fail loud
+// Enforce secret is always set at runtime — skip during SvelteKit build phase
 if (typeof globalThis.__script_wars_auth_checked === 'undefined') {
 	globalThis.__script_wars_auth_checked = true;
-	if (!secret) {
+	const isBuilding = process.env.BUILDING === 'true' || process.argv.includes('build');
+	if (!process.env.BETTER_AUTH_SECRET && !isBuilding) {
 		throw new Error(
 			'FATAL: BETTER_AUTH_SECRET must be set. ' +
 			'Generate one with: openssl rand -base64 32'
