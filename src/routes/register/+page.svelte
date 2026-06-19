@@ -1,29 +1,86 @@
 <script lang="ts">
 	import { authClient } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
+	import { validateDisplayName } from '$lib/validation';
+	import { onMount } from 'svelte';
+
+	let { data } = $props();
+
+	const turnstileSiteKey = data.turnstileSiteKey ?? '';
 
 	let email = $state('');
 	let password = $state('');
 	let name = $state('');
 	let error = $state('');
 	let loading = $state(false);
+	let nameError = $derived(name.length > 0 ? validateDisplayName(name).error ?? '' : '');
+	let turnstileToken = $state('');
+	let turnstileContainer: HTMLDivElement;
+	const hasTurnstile = !!turnstileSiteKey;
+
+	onMount(() => {
+		if (!hasTurnstile) return;
+
+		// Load Turnstile script
+		const script = document.createElement('script');
+		script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+		script.async = true;
+		script.defer = true;
+		script.onload = () => {
+			(window as any).turnstile.render(turnstileContainer, {
+				sitekey: turnstileSiteKey,
+				callback: (token: string) => { turnstileToken = token; },
+				theme: 'dark'
+			});
+		};
+		document.head.appendChild(script);
+
+		return () => {
+			script.remove();
+		};
+	});
 
 	async function handleRegister(e: SubmitEvent) {
 		e.preventDefault();
 		error = '';
+
+		const nameCheck = validateDisplayName(name);
+		if (!nameCheck.valid) {
+			error = nameCheck.error!;
+			return;
+		}
+
+		if (hasTurnstile && !turnstileToken) {
+			error = 'Please complete the verification challenge';
+			return;
+		}
+
 		loading = true;
+
+		const fetchOptions: Record<string, string> = {};
+		if (hasTurnstile && turnstileToken) {
+			fetchOptions['x-captcha-response'] = turnstileToken;
+		}
 
 		const { error: err } = await authClient.signUp.email({
 			email,
 			password,
-			name
+			name: name.trim(),
+			fetchOptions: {
+				headers: fetchOptions
+			}
 		});
 
 		if (err) {
 			error = err.message ?? 'Registration failed';
 			loading = false;
+			// Reset turnstile on failure
+			if (hasTurnstile && (window as any).turnstile) {
+				(window as any).turnstile.reset();
+				turnstileToken = '';
+			}
 		} else {
-			goto('/scripts');
+			goto('/games');
 		}
 	}
 </script>
@@ -36,7 +93,10 @@
 		<form onsubmit={handleRegister}>
 			<div class="form-group">
 				<label for="name">Display Name</label>
-				<input id="name" type="text" bind:value={name} required autocomplete="username" />
+				<input id="name" type="text" bind:value={name} required autocomplete="username" minlength="2" maxlength="20" />
+				{#if nameError}
+					<p class="field-error">{nameError}</p>
+				{/if}
 			</div>
 			<div class="form-group">
 				<label for="email">Email</label>
@@ -53,6 +113,10 @@
 					autocomplete="new-password"
 				/>
 			</div>
+
+			{#if hasTurnstile}
+				<div class="turnstile-wrapper" bind:this={turnstileContainer}></div>
+			{/if}
 
 			{#if error}
 				<p class="error">{error}</p>
@@ -100,5 +164,17 @@
 		margin-top: 1.25rem;
 		font-size: 0.9rem;
 		color: var(--text-muted);
+	}
+
+	.field-error {
+		color: var(--danger, #f44336);
+		font-size: 0.8rem;
+		margin-top: 0.25rem;
+	}
+
+	.turnstile-wrapper {
+		display: flex;
+		justify-content: center;
+		margin: 0.75rem 0;
 	}
 </style>

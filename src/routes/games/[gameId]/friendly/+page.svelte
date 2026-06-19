@@ -44,43 +44,6 @@
 	<h1>⚔️ Friendly Match</h1>
 	<p class="subtitle">Challenge another player — no effect on tournament rankings.</p>
 
-	{#if !data.isLoggedIn}
-		<div class="card empty">
-			<p>Log in to play friendly matches.</p>
-			<a href="/login" class="btn btn-primary">Log In</a>
-		</div>
-	{:else if !data.hasActiveScript}
-		<div class="card empty">
-			<p>You need an active script to play friendly matches.</p>
-			<a href="/games/{data.gameId}/scripts" class="btn btn-primary">Go to Scripts</a>
-		</div>
-	{:else if data.opponents.length === 0}
-		<div class="card empty">
-			<p>No other players with active scripts yet. Invite someone!</p>
-		</div>
-	{:else}
-		<div class="opponent-list">
-			<h2>Choose an Opponent</h2>
-			{#each data.opponents as opp}
-				<div class="card opponent-card">
-					<div class="opponent-info">
-						<span class="opponent-name">
-							<a href="/player/{opp.playerId}">{opp.playerName}</a>
-						</span>
-						<span class="opponent-script">{opp.scriptName}</span>
-					</div>
-					<button
-						class="btn btn-primary"
-						disabled={playing}
-						onclick={() => challenge(opp.scriptId)}
-					>
-						{playing ? '⏳ Fighting...' : '⚔️ Challenge'}
-					</button>
-				</div>
-			{/each}
-		</div>
-	{/if}
-
 	{#if errorMsg}
 		<div class="card error-card">
 			<p class="error">{errorMsg}</p>
@@ -152,6 +115,43 @@
 					</div>
 				</details>
 			{/if}
+		</div>
+	{/if}
+
+	{#if !data.isLoggedIn}
+		<div class="card empty">
+			<p>Log in to play friendly matches.</p>
+			<a href="/login" class="btn btn-primary">Log In</a>
+		</div>
+	{:else if !data.hasActiveScript}
+		<div class="card empty">
+			<p>You need an active script to play friendly matches.</p>
+			<a href="/games/{data.gameId}/scripts" class="btn btn-primary">Go to Scripts</a>
+		</div>
+	{:else if data.opponents.length === 0}
+		<div class="card empty">
+			<p>No other players with active scripts yet. Invite someone!</p>
+		</div>
+	{:else}
+		<div class="opponent-list">
+			<h2>Choose an Opponent</h2>
+			{#each data.opponents as opp}
+				<div class="card opponent-card">
+					<div class="opponent-info">
+						<span class="opponent-name">
+							<a href="/player/{opp.playerId}">{opp.playerName}</a>
+						</span>
+						<span class="opponent-script">{opp.scriptName}</span>
+					</div>
+					<button
+						class="btn btn-primary"
+						disabled={playing}
+						onclick={() => challenge(opp.scriptId)}
+					>
+						{playing ? '⏳ Fighting...' : '⚔️ Challenge'}
+					</button>
+				</div>
+			{/each}
 		</div>
 	{/if}
 </div>
