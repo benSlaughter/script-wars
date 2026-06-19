@@ -1,7 +1,11 @@
 <script lang="ts">
+	import { authClient } from '$lib/auth-client';
+
 	let { data } = $props();
 	let running = $state(false);
 	let message = $state('');
+
+	const session = authClient.useSession();
 
 	async function runTournament() {
 		running = true;
@@ -12,7 +16,6 @@
 		if (res.ok) {
 			const result = await res.json();
 			message = `✅ Tournament complete! ${result.matchesPlayed} matches between ${result.participants} players.`;
-			// Reload page to show updated leaderboard
 			setTimeout(() => window.location.reload(), 1500);
 		} else {
 			const err = await res.json().catch(() => ({ message: 'Failed' }));
@@ -25,9 +28,11 @@
 
 <div class="leaderboard-header">
 	<h1>🏆 Leaderboard</h1>
-	<button class="btn btn-primary" onclick={runTournament} disabled={running}>
-		{running ? '⏳ Running...' : '⚔️ Run Tournament'}
-	</button>
+	{#if $session.data}
+		<button class="btn btn-primary" onclick={runTournament} disabled={running}>
+			{running ? '⏳ Running...' : '⚔️ Run Tournament'}
+		</button>
+	{/if}
 </div>
 
 {#if message}
