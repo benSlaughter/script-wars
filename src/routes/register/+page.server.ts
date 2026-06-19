@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { env } from '$env/dynamic/private';
+import { env } from '$env/dynamic/public';
 
 export const load: PageServerLoad = async () => {
 	return {

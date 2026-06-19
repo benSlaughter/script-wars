@@ -17,9 +17,22 @@ if (typeof globalThis.__script_wars_auth_checked === 'undefined') {
 	}
 }
 
-const resendKey = process.env.RESEND_API_KEY;
-const resend = resendKey ? new Resend(resendKey) : null;
-const emailFrom = process.env.EMAIL_FROM ?? 'Script Wars <noreply@scriptwars.dev>';
+// Lazy-initialize Resend client on first use
+let _resend: Resend | null | undefined = undefined;
+async function getResend(): Promise<Resend | null> {
+	if (_resend === undefined) {
+		// Import env dynamically to access Vite-loaded .env vars
+		const { env } = await import('$env/dynamic/private');
+		const key = env.RESEND_API_KEY;
+		_resend = key ? new Resend(key) : null;
+	}
+	return _resend;
+}
+
+async function getEmailFrom(): Promise<string> {
+	const { env } = await import('$env/dynamic/private');
+	return env.EMAIL_FROM ?? 'Script Wars <noreply@scriptwars.dev>';
+}
 
 export const auth = betterAuth({
 	secret,
@@ -35,15 +48,16 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 		minPasswordLength: 8,
-		requireEmailVerification: !!resend
+		requireEmailVerification: true
 	},
 	emailVerification: {
-		sendOnSignUp: !!resend,
+		sendOnSignUp: true,
 		autoSignInAfterVerification: true,
 		sendVerificationEmail: async ({ user, url }) => {
+			const resend = await getResend();
 			if (resend) {
 				await resend.emails.send({
-					from: emailFrom,
+					from: await getEmailFrom(),
 					to: user.email,
 					subject: 'Verify your Script Wars account',
 					html: `
@@ -71,7 +85,8 @@ export const auth = betterAuth({
  * Returns true if valid, false otherwise.
  */
 export async function verifyTurnstile(token: string, ip?: string): Promise<boolean> {
-	const secretKey = process.env.TURNSTILE_SECRET_KEY;
+	const { env } = await import('$env/dynamic/private');
+	const secretKey = env.TURNSTILE_SECRET_KEY;
 	if (!secretKey) return true; // Skip if not configured
 
 	const formData = new URLSearchParams();

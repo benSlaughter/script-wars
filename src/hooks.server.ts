@@ -4,6 +4,7 @@ import { startScheduler } from '$lib/server/scheduler';
 import { checkRateLimit, RATE_LIMITS } from '$lib/server/rate-limit';
 import { json, type Handle } from '@sveltejs/kit';
 import { validateDisplayName } from '$lib/validation';
+import { env } from '$env/dynamic/private';
 
 // Start hourly tournament scheduler on server boot
 startScheduler();
@@ -36,7 +37,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 			// Verify Turnstile token
 			const captchaToken = event.request.headers.get('x-captcha-response');
-			if (process.env.TURNSTILE_SECRET_KEY) {
+			if (env.TURNSTILE_SECRET_KEY) {
 				if (!captchaToken) {
 					return json({ message: 'CAPTCHA verification required' }, { status: 400 });
 				}
