@@ -14,8 +14,9 @@
 <span class="keyword">end</span>
 
 <span class="comment">-- Counter their last move</span>
-<span class="keyword">local</span> counters = &#123;rock=<span class="string">"paper"</span>, paper=<span class="string">"scissors"</span>, scissors=<span class="string">"rock"</span>&#125;
-<span class="keyword">return</span> counters[opponent_history[#opponent_history]]</code></pre>
+<span class="keyword">local</span> c = &#123;rock=<span class="string">"paper"</span>, paper=<span class="string">"scissors"</span>,
+  scissors=<span class="string">"rock"</span>&#125;
+<span class="keyword">return</span> c[opponent_history[#opponent_history]]</code></pre>
 	</div>
 
 	<div class="cta-row">

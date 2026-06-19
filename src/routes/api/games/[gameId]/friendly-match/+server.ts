@@ -48,7 +48,11 @@ export const POST: RequestHandler = async ({ request, params }) => {
 	if (oppScript.userId === session.user.id) throw error(400, "You can't play against yourself");
 
 	// Run the match
-	const result = await runMatch(myScript.code, oppScript.code);
+	const result = await runMatch(myScript.code, oppScript.code, game.maxRounds, {
+		isValidMove: (m) => game.isValidMove(m),
+		resolveRound: (a, b) => game.resolveRound(a, b),
+		buildContext: (r, my, opp) => game.buildContext(r, my, opp)
+	});
 
 	// Get opponent name
 	const [opponent] = await db

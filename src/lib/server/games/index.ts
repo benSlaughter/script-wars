@@ -1,11 +1,13 @@
 import type { GamePlugin } from './types.js';
 import { rpsGame } from './rps.js';
+import { prisonerGame } from './prisoners-dilemma.js';
 
 /** All registered games */
 const games: Map<string, GamePlugin> = new Map();
 
 // Register games
 games.set(rpsGame.id, rpsGame);
+games.set(prisonerGame.id, prisonerGame);
 
 /** Get a game by ID, or throw */
 export function getGame(gameId: string): GamePlugin {

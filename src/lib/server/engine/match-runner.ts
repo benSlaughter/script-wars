@@ -1,11 +1,10 @@
 import { executeLuaScript, type ScriptContext } from './sandbox.js';
-import { resolveRound, isValidMove, type Move, type RoundResult } from './rps.js';
 
 export interface RoundDetail {
 	round: number;
-	moveA: Move | null;
-	moveB: Move | null;
-	result: RoundResult | 'a_error' | 'b_error';
+	moveA: string | null;
+	moveB: string | null;
+	result: 'a_wins' | 'b_wins' | 'draw' | 'a_error' | 'b_error';
 	errorA?: string;
 	errorB?: string;
 }
@@ -19,15 +18,22 @@ export interface MatchResult {
 	winner: 'a' | 'b' | 'draw';
 }
 
+export interface GameFunctions {
+	isValidMove(move: string): boolean;
+	resolveRound(moveA: string, moveB: string): 'a' | 'b' | 'draw';
+	buildContext(round: number, myHistory: string[], opponentHistory: string[]): ScriptContext;
+}
+
 const DEFAULT_ROUNDS = 100;
 
 /**
- * Run a full match between two scripts — best of N rounds.
+ * Run a full match between two scripts using the given game functions.
  */
 export async function runMatch(
 	codeA: string,
 	codeB: string,
-	totalRounds: number = DEFAULT_ROUNDS
+	totalRounds: number = DEFAULT_ROUNDS,
+	game?: GameFunctions
 ): Promise<MatchResult> {
 	const historyA: string[] = [];
 	const historyB: string[] = [];
@@ -36,23 +42,13 @@ export async function runMatch(
 	let winsB = 0;
 	let draws = 0;
 
+	// Default game functions (RPS) for backward compatibility
+	const { isValidMove, resolveRound, buildContext } = game ?? await getDefaultGame();
+
 	for (let round = 1; round <= totalRounds; round++) {
-		// Build context for each script
-		// Script A sees B's history as opponent
-		const contextA: ScriptContext = {
-			opponent_history: [...historyB],
-			my_history: [...historyA],
-			round_number: round
-		};
+		const contextA: ScriptContext = buildContext(round, historyA, historyB);
+		const contextB: ScriptContext = buildContext(round, historyB, historyA);
 
-		// Script B sees A's history as opponent
-		const contextB: ScriptContext = {
-			opponent_history: [...historyA],
-			my_history: [...historyB],
-			round_number: round
-		};
-
-		// Execute both scripts
 		const [resultA, resultB] = await Promise.all([
 			executeLuaScript(codeA, contextA),
 			executeLuaScript(codeB, contextB)
@@ -61,24 +57,19 @@ export async function runMatch(
 		const moveA = resultA.success && isValidMove(resultA.output) ? resultA.output : null;
 		const moveB = resultB.success && isValidMove(resultB.output) ? resultB.output : null;
 
-		// Determine round result
 		let result: RoundDetail['result'];
 
 		if (moveA && moveB) {
-			// Both valid — normal resolution
-			result = resolveRound(moveA, moveB);
+			const resolution = resolveRound(moveA, moveB);
+			result = resolution === 'a' ? 'a_wins' : resolution === 'b' ? 'b_wins' : 'draw';
 		} else if (!moveA && !moveB) {
-			// Both errored — draw
 			result = 'draw';
 		} else if (!moveA) {
-			// A errored — B wins
 			result = 'b_error';
 		} else {
-			// B errored — A wins
 			result = 'a_error';
 		}
 
-		// Update scores
 		switch (result) {
 			case 'a_wins':
 			case 'a_error':
@@ -93,7 +84,6 @@ export async function runMatch(
 				break;
 		}
 
-		// Record history (use actual move or "error" for tracking)
 		historyA.push(moveA ?? 'error');
 		historyB.push(moveB ?? 'error');
 
@@ -116,5 +106,22 @@ export async function runMatch(
 		rounds,
 		totalRounds,
 		winner
+	};
+}
+
+// Lazy-load default RPS game to avoid circular imports
+async function getDefaultGame(): Promise<GameFunctions> {
+	const { resolveRound, isValidMove } = await import('./rps.js');
+	return {
+		isValidMove: (move: string) => isValidMove(move),
+		resolveRound: (a: string, b: string) => {
+			const r = resolveRound(a as any, b as any);
+			return r === 'a_wins' ? 'a' : r === 'b_wins' ? 'b' : 'draw';
+		},
+		buildContext: (round, myHistory, opponentHistory) => ({
+			opponent_history: opponentHistory,
+			my_history: myHistory,
+			round_number: round
+		})
 	};
 }
