@@ -1,0 +1,25 @@
+services:
+  script-wars:
+    image: ghcr.io/benslaughter/script-wars:latest
+    container_name: script-wars
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - script-wars-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - BETTER_AUTH_URL=https://script-wars.benslaughter.com
+      - PUBLIC_TURNSTILE_SITE_KEY=${PUBLIC_TURNSTILE_SITE_KEY}
+      - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM:-Script Wars <noreply@scriptwars.dev>}
+      - ADMIN_SECRET=${ADMIN_SECRET}
+    env_file:
+      - .env
+
+volumes:
+  script-wars-data:
