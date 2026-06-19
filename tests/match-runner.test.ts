@@ -90,4 +90,28 @@ describe('Match Runner', () => {
 		expect(result.draws).toBe(3);
 		expect(result.winner).toBe('draw');
 	});
+
+	it('treats invalid move as forfeit (opponent wins)', async () => {
+		const result = await runMatch(
+			'return "banana"', // invalid move
+			'return "rock"',
+			5
+		);
+
+		// A always returns invalid → B wins every round
+		expect(result.winsB).toBe(5);
+		expect(result.winsA).toBe(0);
+		expect(result.winner).toBe('b');
+	});
+
+	it('treats erroring script as forfeit (opponent wins)', async () => {
+		const result = await runMatch(
+			'error("oops")',
+			'return "paper"',
+			5
+		);
+
+		expect(result.winsB).toBe(5);
+		expect(result.winner).toBe('b');
+	});
 });
