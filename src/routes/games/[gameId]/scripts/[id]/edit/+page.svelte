@@ -8,9 +8,8 @@
 
 	const gameId = $derived(page.params.gameId);
 
-	let name = $state('');
-	let code = $state('');
-	let initialized = false;
+	let name = $state(data.script.name);
+	let code = $state(data.script.code);
 	let error = $state('');
 	let saving = $state(false);
 
@@ -25,14 +24,6 @@
 
 	let testResults = $state<TestResult[]>([]);
 	let testing = $state(false);
-
-	$effect(() => {
-		if (!initialized) {
-			name = data.script.name;
-			code = data.script.code;
-			initialized = true;
-		}
-	});
 
 	async function handleTest() {
 		testing = true;
