@@ -7,8 +7,9 @@ import { Resend } from 'resend';
 const secret = process.env.BETTER_AUTH_SECRET ?? 'build-placeholder';
 
 // Enforce secret is always set at runtime — skip during SvelteKit build phase
-if (typeof globalThis.__script_wars_auth_checked === 'undefined') {
-	globalThis.__script_wars_auth_checked = true;
+const _g = globalThis as Record<string, unknown>;
+if (typeof _g.__script_wars_auth_checked === 'undefined') {
+	_g.__script_wars_auth_checked = true;
 	const isBuilding = process.env.BUILDING === 'true' || process.argv.includes('build');
 	if (!process.env.BETTER_AUTH_SECRET && !isBuilding) {
 		throw new Error(

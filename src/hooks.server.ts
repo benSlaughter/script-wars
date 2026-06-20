@@ -84,5 +84,5 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	const { auth } = await getAuthModule();
 	const { svelteKitHandler } = await getSvelteKitHandler();
-	return svelteKitHandler({ event, resolve, auth });
+	return svelteKitHandler({ event, resolve, auth, building: false });
 };
