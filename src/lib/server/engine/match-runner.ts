@@ -66,8 +66,8 @@ export async function runMatch(
 			executeLuaScript(codeB, contextB)
 		]);
 
-		const moveA = resultA.success && isValidMove(resultA.output) ? resultA.output : null;
-		const moveB = resultB.success && isValidMove(resultB.output) ? resultB.output : null;
+		const moveA = resultA.success && resultA.output && isValidMove(resultA.output) ? resultA.output : null;
+		const moveB = resultB.success && resultB.output && isValidMove(resultB.output) ? resultB.output : null;
 
 		let result: RoundDetail['result'];
 
