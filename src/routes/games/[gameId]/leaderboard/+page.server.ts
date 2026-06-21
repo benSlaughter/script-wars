@@ -1,13 +1,16 @@
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { scripts, matches, users } from '$lib/server/schema';
-import { eq, sql, or, and } from 'drizzle-orm';
+import { eq, or, and, gte } from 'drizzle-orm';
 import { dev } from '$app/environment';
 import { getGame } from '$lib/server/games';
+import { getLeaderboardRangeStart, parseLeaderboardRange } from '$lib/server/leaderboard-range';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, url }) => {
 	const { gameId } = params;
 	const game = getGame(gameId);
+	const range = parseLeaderboardRange(url.searchParams.get('range'));
+	const rangeStart = getLeaderboardRangeStart(range);
 
 	// Get all active entries for this game with their match stats
 	const activeScripts = await db
@@ -31,6 +34,7 @@ export const load: PageServerLoad = async ({ params }) => {
 					and(
 						eq(matches.gameId, gameId),
 						eq(matches.matchType, 'tournament'),
+						...(rangeStart ? [gte(matches.playedAt, rangeStart)] : []),
 						or(
 							eq(matches.scriptAId, entry.scriptId),
 							eq(matches.scriptBId, entry.scriptId)
@@ -83,5 +87,5 @@ export const load: PageServerLoad = async ({ params }) => {
 		});
 	}
 
-	return { entries, gameId, isDev: dev, pointBased: game.pointBased };
+	return { entries, gameId, isDev: dev, pointBased: game.pointBased, range };
 };

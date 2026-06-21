@@ -24,6 +24,13 @@
 	function minutesUntilNextHour() {
 		return 60 - new Date().getMinutes();
 	}
+
+	const ranges = [
+		{ id: 'day', label: 'Day' },
+		{ id: 'week', label: 'Week' },
+		{ id: 'month', label: 'Month' },
+		{ id: 'all', label: 'All Time' }
+	];
 </script>
 
 <div class="leaderboard-header">
@@ -41,6 +48,12 @@
 {#if message}
 	<p class="message">{message}</p>
 {/if}
+
+<div class="range-tabs">
+	{#each ranges as range}
+		<a href={`?range=${range.id}`} class:active={data.range === range.id}>{range.label}</a>
+	{/each}
+</div>
 
 {#if data.entries.length === 0}
 	<div class="card empty">
@@ -110,6 +123,26 @@
 		background: var(--bg-card);
 		border: 1px solid var(--border);
 		font-size: 0.9rem;
+	}
+
+	.range-tabs {
+		display: flex;
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.range-tabs a {
+		padding: 0.35rem 0.7rem;
+		border-radius: 999px;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		color: var(--text-muted);
+		font-size: 0.8rem;
+	}
+
+	.range-tabs a.active {
+		border-color: var(--accent);
+		color: var(--text);
 	}
 
 	.empty {
