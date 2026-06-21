@@ -32,6 +32,12 @@ export const load: PageServerLoad = async ({ params, request }) => {
 
 		hasActiveScript = !!myScript;
 
+		// Get all of the user's scripts for this game (for sparring)
+		const myScripts = await db
+			.select({ id: scripts.id, name: scripts.name })
+			.from(scripts)
+			.where(and(eq(scripts.userId, session.user.id), eq(scripts.gameId, gameId)));
+
 		// Get all other players' active scripts
 		opponents = await db
 			.select({
@@ -49,6 +55,16 @@ export const load: PageServerLoad = async ({ params, request }) => {
 					ne(scripts.userId, session.user.id)
 				)
 			);
+
+		return {
+			gameId,
+			gameName: game.name,
+			pointBased: game.pointBased,
+			hasActiveScript,
+			opponents,
+			myScripts,
+			isLoggedIn: true
+		};
 	}
 
 	return {
@@ -57,6 +73,7 @@ export const load: PageServerLoad = async ({ params, request }) => {
 		pointBased: game.pointBased,
 		hasActiveScript,
 		opponents,
+		myScripts: [] as { id: string; name: string }[],
 		isLoggedIn: !!session
 	};
 };

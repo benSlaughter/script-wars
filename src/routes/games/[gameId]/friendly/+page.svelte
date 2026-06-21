@@ -15,6 +15,22 @@
 	} | null = $state(null);
 	let errorMsg = $state('');
 
+	// Sparring state
+	let sparring = $state(false);
+	let sparringResult: {
+		scriptA: string;
+		scriptB: string;
+		winsA: number;
+		winsB: number;
+		draws: number;
+		scoreA: number;
+		scoreB: number;
+		winner: 'a' | 'b' | 'draw';
+		rounds: { round: number; moveA: string | null; moveB: string | null; result: string }[];
+	} | null = $state(null);
+	let sparScriptA = $state('');
+	let sparScriptB = $state('');
+
 	async function challenge(opponentScriptId: string) {
 		playing = true;
 		result = null;
@@ -38,6 +54,33 @@
 			errorMsg = 'Network error';
 		} finally {
 			playing = false;
+		}
+	}
+
+	async function runSparring() {
+		if (!sparScriptA || !sparScriptB || sparScriptA === sparScriptB) return;
+		sparring = true;
+		sparringResult = null;
+		errorMsg = '';
+
+		try {
+			const res = await fetch(`/api/games/${data.gameId}/sparring`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ scriptAId: sparScriptA, scriptBId: sparScriptB })
+			});
+
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({ message: 'Sparring failed' }));
+				errorMsg = err.message || 'Sparring failed';
+				return;
+			}
+
+			sparringResult = await res.json();
+		} catch {
+			errorMsg = 'Network error';
+		} finally {
+			sparring = false;
 		}
 	}
 </script>
@@ -136,31 +179,132 @@
 			<p>You need an active script to play friendly matches.</p>
 			<a href="/games/{data.gameId}/scripts" class="btn btn-primary">Go to Scripts</a>
 		</div>
-	{:else if data.opponents.length === 0}
-		<div class="card empty">
-			<p>No other players with active scripts yet. Invite someone!</p>
-		</div>
 	{:else}
-		<div class="opponent-list">
-			<h2>Choose an Opponent</h2>
-			{#each data.opponents as opp}
-				<div class="card opponent-card">
-					<div class="opponent-info">
-						<span class="opponent-name">
-							<a href="/player/{opp.playerId}">{opp.playerName}</a>
-						</span>
-						<span class="opponent-script">{opp.scriptName}</span>
+		{#if data.myScripts.length >= 2}
+			<div class="sparring-section">
+				<h2>🥊 Sparring — Pit Your Scripts Against Each Other</h2>
+				<p class="section-desc">Test your strategies head-to-head. No rankings affected.</p>
+				<div class="card sparring-card">
+					<div class="sparring-selects">
+						<select bind:value={sparScriptA}>
+							<option value="">Pick script A...</option>
+							{#each data.myScripts as s}
+								<option value={s.id}>{s.name}</option>
+							{/each}
+						</select>
+						<span class="vs-badge">vs</span>
+						<select bind:value={sparScriptB}>
+							<option value="">Pick script B...</option>
+							{#each data.myScripts as s}
+								<option value={s.id}>{s.name}</option>
+							{/each}
+						</select>
 					</div>
 					<button
 						class="btn btn-primary"
-						disabled={playing}
-						onclick={() => challenge(opp.scriptId)}
+						disabled={sparring || !sparScriptA || !sparScriptB || sparScriptA === sparScriptB}
+						onclick={runSparring}
 					>
-						{playing ? '⏳ Fighting...' : '⚔️ Challenge'}
+						{sparring ? '⏳ Fighting...' : '🥊 Spar!'}
 					</button>
 				</div>
-			{/each}
-		</div>
+
+				{#if sparringResult}
+					<div class="card result-card" class:win={sparringResult.winner === 'a'} class:loss={sparringResult.winner === 'b'} class:draw={sparringResult.winner === 'draw'}>
+						<div class="result-banner">
+							{#if sparringResult.winner === 'a'}
+								<span class="result-text">🏆 {sparringResult.scriptA} wins!</span>
+							{:else if sparringResult.winner === 'b'}
+								<span class="result-text">🏆 {sparringResult.scriptB} wins!</span>
+							{:else}
+								<span class="result-text">🤝 Draw!</span>
+							{/if}
+						</div>
+						<div class="result-details">
+							<div class="matchup">
+								<span class="you">{sparringResult.scriptA}</span>
+								<span class="vs">vs</span>
+								<span class="them">{sparringResult.scriptB}</span>
+							</div>
+							<div class="score-line">
+								{#if data.pointBased}
+									<span class="points">{sparringResult.scoreA} pts</span>
+									<span class="vs">vs</span>
+									<span class="points">{sparringResult.scoreB} pts</span>
+								{:else}
+									<span class="win">{sparringResult.winsA}W</span>
+									<span class="loss">{sparringResult.winsB}L</span>
+									<span class="draw">{sparringResult.draws}D</span>
+								{/if}
+							</div>
+						</div>
+					</div>
+
+					{#if sparringResult.rounds && sparringResult.rounds.length > 0}
+						<details class="round-details">
+							<summary>📋 Round-by-round breakdown ({sparringResult.rounds.length} rounds)</summary>
+							<div class="card rounds-table">
+								<table>
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>{sparringResult.scriptA}</th>
+											<th>{sparringResult.scriptB}</th>
+											<th>Result</th>
+										</tr>
+									</thead>
+									<tbody>
+										{#each sparringResult.rounds as round}
+											<tr>
+												<td class="round-num">{round.round}</td>
+												<td>{round.moveA ?? '❌ error'}</td>
+												<td>{round.moveB ?? '❌ error'}</td>
+												<td>
+													{#if round.result === 'a_wins' || round.result === 'a_error'}
+														<span class="win">← wins</span>
+													{:else if round.result === 'b_wins' || round.result === 'b_error'}
+														<span class="loss">wins →</span>
+													{:else}
+														<span class="draw">➖</span>
+													{/if}
+												</td>
+											</tr>
+										{/each}
+									</tbody>
+								</table>
+							</div>
+						</details>
+					{/if}
+				{/if}
+			</div>
+		{/if}
+
+		{#if data.opponents.length === 0}
+			<div class="card empty">
+				<p>No other players with active scripts yet. Invite someone!</p>
+			</div>
+		{:else}
+			<div class="opponent-list">
+				<h2>⚔️ Challenge Another Player</h2>
+				{#each data.opponents as opp}
+					<div class="card opponent-card">
+						<div class="opponent-info">
+							<span class="opponent-name">
+								<a href="/player/{opp.playerId}">{opp.playerName}</a>
+							</span>
+							<span class="opponent-script">{opp.scriptName}</span>
+						</div>
+						<button
+							class="btn btn-primary"
+							disabled={playing}
+							onclick={() => challenge(opp.scriptId)}
+						>
+							{playing ? '⏳ Fighting...' : '⚔️ Challenge'}
+						</button>
+					</div>
+				{/each}
+			</div>
+		{/if}
 	{/if}
 </div>
 
@@ -172,6 +316,46 @@
 	.subtitle {
 		color: var(--text-muted);
 		margin-bottom: 2rem;
+	}
+
+	.sparring-section {
+		margin-bottom: 2.5rem;
+	}
+
+	.section-desc {
+		color: var(--text-muted);
+		margin-bottom: 1rem;
+		font-size: 0.9rem;
+	}
+
+	.sparring-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.sparring-selects {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		width: 100%;
+	}
+
+	.sparring-selects select {
+		flex: 1;
+		padding: 0.5rem;
+		border: 1px solid var(--border);
+		border-radius: 0.5rem;
+		background: var(--bg-secondary, #1a1a2e);
+		color: var(--text);
+		font-size: 0.9rem;
+	}
+
+	.vs-badge {
+		color: var(--text-muted);
+		font-weight: 700;
+		font-size: 0.85rem;
 	}
 
 	.opponent-list h2 {
